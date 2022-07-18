@@ -1,0 +1,376 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 40.91      0.09     0.09  2095019     0.00     0.00  __msh2tri_MOD_checkneig
+ 13.64      0.12     0.03  6767137     0.00     0.00  __msh2tri_MOD_get_length
+  9.09      0.14     0.02        1    20.00   210.00  __transport_tri_semi_MOD_semi_implicit_iterative
+  4.55      0.15     0.01   455977     0.00     0.00  __generic_MOD_areequal2
+  4.55      0.16     0.01    25497     0.00     0.00  __strings_MOD_compact
+  4.55      0.17     0.01     6144     0.00     0.00  __msh2tri_MOD_get_d_center
+  4.55      0.18     0.01     3346     0.00     0.01  __strings_MOD_parse
+  4.55      0.19     0.01     2048     0.00     0.01  __shapfun_MOD_semi_tri_det_nlx
+  4.55      0.20     0.01     2048     0.00     0.00  __shapfun_MOD_tri_det_nlx
+  4.55      0.21     0.01        1    10.00   160.00  __msh2tri_MOD_readmsh
+  4.55      0.22     0.01                             __evaluate_MOD_evalexpr_dc
+  0.00      0.22     0.00   155648     0.00     0.00  __msh2tri_MOD_get_splitting
+  0.00      0.22     0.00   155648     0.00     0.00  __msh2tri_MOD_get_str_info
+  0.00      0.22     0.00    22151     0.00     0.00  __strings_MOD_removebksl
+  0.00      0.22     0.00    22151     0.00     0.00  __strings_MOD_split
+  0.00      0.22     0.00    20480     0.00     0.00  __shapfun_unstruc_MOD_get_mass_stiff_diffvol
+  0.00      0.22     0.00    19144     0.00     0.00  __strings_MOD_is_digit
+  0.00      0.22     0.00    19144     0.00     0.00  __strings_MOD_value_dr
+  0.00      0.22     0.00    18432     0.00     0.00  __msh2tri_MOD_getneigdatamesh
+  0.00      0.22     0.00    17952     0.00     0.00  __generic_MOD_numloc
+  0.00      0.22     0.00    15828     0.00     0.00  __strings_MOD_value_si
+  0.00      0.22     0.00    12288     0.00     0.00  __shapfun_MOD_normgi
+  0.00      0.22     0.00    12288     0.00     0.00  __shapfun_MOD_xprod1
+  0.00      0.22     0.00     6144     0.00     0.00  __shapfun_MOD_det_snlx_all
+  0.00      0.22     0.00     4032     0.00     0.00  __generic_MOD_checkvector
+  0.00      0.22     0.00     3353     0.00     0.00  __strings_MOD_readline
+  0.00      0.22     0.00     2048     0.00     0.00  __shapfun_MOD_semi_det_snlx
+  0.00      0.22     0.00        5     0.00     0.00  __shapfun_MOD_triquaold
+  0.00      0.22     0.00        4     0.00     0.00  __shapfun_MOD_shatrinew
+  0.00      0.22     0.00        4     0.00     0.00  __shapfun_MOD_shatriold
+  0.00      0.22     0.00        4     0.00     0.00  __shapfun_MOD_triangles_tets_with_time
+  0.00      0.22     0.00        2     0.00     0.00  __shapfun_MOD_get_shape_funs
+  0.00      0.22     0.00        1     0.00   210.00  MAIN__
+  0.00      0.22     0.00        1     0.00     0.00  __shapfun_MOD_get_shape_funs_spec
+  0.00      0.22     0.00        1     0.00     0.00  __shapfun_MOD_get_shape_funs_with_faces
+  0.00      0.22     0.00        1     0.00     0.00  __shapfun_MOD_tri_surface_pointers_sn
+  0.00      0.22     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_get_shape_funs_spec_ustr
+  0.00      0.22     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr
+  0.00      0.22     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn
+  0.00      0.22     0.00        1     0.00     0.00  __splitting_MOD_get_str_neig
+  0.00      0.22     0.00        1     0.00     0.00  __splitting_MOD_get_surface_ele
+  0.00      0.22     0.00        1     0.00     0.00  __strings_MOD_delsubstr
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 4.55% of 0.22 seconds
+
+index % time    self  children    called     name
+                0.00    0.21       1/1           main [2]
+[1]     95.5    0.00    0.21       1         MAIN__ [1]
+                0.02    0.19       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+-----------------------------------------------
+                                                 <spontaneous>
+[2]     95.5    0.00    0.21                 main [2]
+                0.00    0.21       1/1           MAIN__ [1]
+-----------------------------------------------
+                0.02    0.19       1/1           MAIN__ [1]
+[3]     95.5    0.02    0.19       1         __transport_tri_semi_MOD_semi_implicit_iterative [3]
+                0.01    0.15       1/1           __msh2tri_MOD_readmsh [4]
+                0.01    0.01    2048/2048        __shapfun_MOD_semi_tri_det_nlx [8]
+                0.01    0.00    6144/6144        __msh2tri_MOD_get_d_center [11]
+                0.00    0.00  131072/155648      __msh2tri_MOD_get_splitting [21]
+                0.00    0.00   20480/20480       __shapfun_unstruc_MOD_get_mass_stiff_diffvol [24]
+                0.00    0.00   12288/18432       __msh2tri_MOD_getneigdatamesh [27]
+                0.00    0.00    2048/2048        __shapfun_MOD_semi_det_snlx [35]
+                0.00    0.00       1/1           __splitting_MOD_get_str_neig [47]
+                0.00    0.00       1/5           __shapfun_MOD_triquaold [36]
+                0.00    0.00       1/1           __splitting_MOD_get_surface_ele [48]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [44]
+                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_spec [41]
+-----------------------------------------------
+                0.01    0.15       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[4]     72.7    0.01    0.15       1         __msh2tri_MOD_readmsh [4]
+                0.09    0.04 2095019/2095019     __msh2tri_MOD_checkneig [5]
+                0.01    0.01    3346/3346        __strings_MOD_parse [7]
+                0.00    0.00    6144/6767137     __msh2tri_MOD_get_length [6]
+                0.00    0.00   15828/15828       __strings_MOD_value_si [29]
+                0.00    0.00    3353/3353        __strings_MOD_readline [34]
+                0.00    0.00    3316/19144       __strings_MOD_value_dr [26]
+                0.00    0.00       1/1           __strings_MOD_delsubstr [49]
+-----------------------------------------------
+                0.09    0.04 2095019/2095019     __msh2tri_MOD_readmsh [4]
+[5]     59.1    0.09    0.04 2095019         __msh2tri_MOD_checkneig [5]
+                0.03    0.00 6760993/6767137     __msh2tri_MOD_get_length [6]
+                0.01    0.00  455977/455977      __generic_MOD_areequal2 [9]
+                0.00    0.00    4032/4032        __generic_MOD_checkvector [33]
+-----------------------------------------------
+                0.00    0.00    6144/6767137     __msh2tri_MOD_readmsh [4]
+                0.03    0.00 6760993/6767137     __msh2tri_MOD_checkneig [5]
+[6]     13.6    0.03    0.00 6767137         __msh2tri_MOD_get_length [6]
+-----------------------------------------------
+                0.01    0.01    3346/3346        __msh2tri_MOD_readmsh [4]
+[7]      9.1    0.01    0.01    3346         __strings_MOD_parse [7]
+                0.00    0.01   22151/22151       __strings_MOD_split [14]
+                0.00    0.00    3346/25497       __strings_MOD_compact [10]
+                0.00    0.00   22151/22151       __strings_MOD_removebksl [23]
+-----------------------------------------------
+                0.01    0.01    2048/2048        __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[8]      9.1    0.01    0.01    2048         __shapfun_MOD_semi_tri_det_nlx [8]
+                0.01    0.00    2048/2048        __shapfun_MOD_tri_det_nlx [12]
+-----------------------------------------------
+                0.01    0.00  455977/455977      __msh2tri_MOD_checkneig [5]
+[9]      4.5    0.01    0.00  455977         __generic_MOD_areequal2 [9]
+-----------------------------------------------
+                0.00    0.00    3346/25497       __strings_MOD_parse [7]
+                0.01    0.00   22151/25497       __strings_MOD_split [14]
+[10]     4.5    0.01    0.00   25497         __strings_MOD_compact [10]
+-----------------------------------------------
+                0.01    0.00    6144/6144        __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[11]     4.5    0.01    0.00    6144         __msh2tri_MOD_get_d_center [11]
+                0.00    0.00   24576/155648      __msh2tri_MOD_get_splitting [21]
+-----------------------------------------------
+                0.01    0.00    2048/2048        __shapfun_MOD_semi_tri_det_nlx [8]
+[12]     4.5    0.01    0.00    2048         __shapfun_MOD_tri_det_nlx [12]
+-----------------------------------------------
+                                                 <spontaneous>
+[13]     4.5    0.01    0.00                 __evaluate_MOD_evalexpr_dc [13]
+-----------------------------------------------
+                0.00    0.01   22151/22151       __strings_MOD_parse [7]
+[14]     3.9    0.00    0.01   22151         __strings_MOD_split [14]
+                0.01    0.00   22151/25497       __strings_MOD_compact [10]
+-----------------------------------------------
+                0.00    0.00   24576/155648      __msh2tri_MOD_get_d_center [11]
+                0.00    0.00  131072/155648      __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[21]     0.0    0.00    0.00  155648         __msh2tri_MOD_get_splitting [21]
+                0.00    0.00  155648/155648      __msh2tri_MOD_get_str_info [22]
+-----------------------------------------------
+                0.00    0.00  155648/155648      __msh2tri_MOD_get_splitting [21]
+[22]     0.0    0.00    0.00  155648         __msh2tri_MOD_get_str_info [22]
+-----------------------------------------------
+                0.00    0.00   22151/22151       __strings_MOD_parse [7]
+[23]     0.0    0.00    0.00   22151         __strings_MOD_removebksl [23]
+-----------------------------------------------
+                0.00    0.00   20480/20480       __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[24]     0.0    0.00    0.00   20480         __shapfun_unstruc_MOD_get_mass_stiff_diffvol [24]
+-----------------------------------------------
+                0.00    0.00   19144/19144       __strings_MOD_value_dr [26]
+[25]     0.0    0.00    0.00   19144         __strings_MOD_is_digit [25]
+-----------------------------------------------
+                0.00    0.00    3316/19144       __msh2tri_MOD_readmsh [4]
+                0.00    0.00   15828/19144       __strings_MOD_value_si [29]
+[26]     0.0    0.00    0.00   19144         __strings_MOD_value_dr [26]
+                0.00    0.00   19144/19144       __strings_MOD_is_digit [25]
+-----------------------------------------------
+                0.00    0.00    6144/18432       __splitting_MOD_get_surface_ele [48]
+                0.00    0.00   12288/18432       __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[27]     0.0    0.00    0.00   18432         __msh2tri_MOD_getneigdatamesh [27]
+                0.00    0.00   17952/17952       __generic_MOD_numloc [28]
+-----------------------------------------------
+                0.00    0.00   17952/17952       __msh2tri_MOD_getneigdatamesh [27]
+[28]     0.0    0.00    0.00   17952         __generic_MOD_numloc [28]
+-----------------------------------------------
+                0.00    0.00   15828/15828       __msh2tri_MOD_readmsh [4]
+[29]     0.0    0.00    0.00   15828         __strings_MOD_value_si [29]
+                0.00    0.00   15828/19144       __strings_MOD_value_dr [26]
+-----------------------------------------------
+                0.00    0.00   12288/12288       __shapfun_MOD_det_snlx_all [32]
+[30]     0.0    0.00    0.00   12288         __shapfun_MOD_normgi [30]
+                0.00    0.00   12288/12288       __shapfun_MOD_xprod1 [31]
+-----------------------------------------------
+                0.00    0.00   12288/12288       __shapfun_MOD_normgi [30]
+[31]     0.0    0.00    0.00   12288         __shapfun_MOD_xprod1 [31]
+-----------------------------------------------
+                0.00    0.00    6144/6144        __shapfun_MOD_semi_det_snlx [35]
+[32]     0.0    0.00    0.00    6144         __shapfun_MOD_det_snlx_all [32]
+                0.00    0.00   12288/12288       __shapfun_MOD_normgi [30]
+-----------------------------------------------
+                0.00    0.00    4032/4032        __msh2tri_MOD_checkneig [5]
+[33]     0.0    0.00    0.00    4032         __generic_MOD_checkvector [33]
+-----------------------------------------------
+                0.00    0.00    3353/3353        __msh2tri_MOD_readmsh [4]
+[34]     0.0    0.00    0.00    3353         __strings_MOD_readline [34]
+-----------------------------------------------
+                0.00    0.00    2048/2048        __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[35]     0.0    0.00    0.00    2048         __shapfun_MOD_semi_det_snlx [35]
+                0.00    0.00    6144/6144        __shapfun_MOD_det_snlx_all [32]
+-----------------------------------------------
+                0.00    0.00       1/5           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+                0.00    0.00       4/5           __shapfun_MOD_triangles_tets_with_time [39]
+[36]     0.0    0.00    0.00       5         __shapfun_MOD_triquaold [36]
+-----------------------------------------------
+                0.00    0.00       4/4           __shapfun_MOD_triangles_tets_with_time [39]
+[37]     0.0    0.00    0.00       4         __shapfun_MOD_shatrinew [37]
+                0.00    0.00       4/4           __shapfun_MOD_shatriold [38]
+-----------------------------------------------
+                0.00    0.00       4/4           __shapfun_MOD_shatrinew [37]
+[38]     0.0    0.00    0.00       4         __shapfun_MOD_shatriold [38]
+-----------------------------------------------
+                0.00    0.00       4/4           __shapfun_MOD_get_shape_funs [40]
+[39]     0.0    0.00    0.00       4         __shapfun_MOD_triangles_tets_with_time [39]
+                0.00    0.00       4/5           __shapfun_MOD_triquaold [36]
+                0.00    0.00       4/4           __shapfun_MOD_shatrinew [37]
+-----------------------------------------------
+                0.00    0.00       1/2           __shapfun_MOD_get_shape_funs_with_faces [42]
+                0.00    0.00       1/2           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
+[40]     0.0    0.00    0.00       2         __shapfun_MOD_get_shape_funs [40]
+                0.00    0.00       4/4           __shapfun_MOD_triangles_tets_with_time [39]
+-----------------------------------------------
+                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[41]     0.0    0.00    0.00       1         __shapfun_MOD_get_shape_funs_spec [41]
+                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_with_faces [42]
+-----------------------------------------------
+                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_spec [41]
+[42]     0.0    0.00    0.00       1         __shapfun_MOD_get_shape_funs_with_faces [42]
+                0.00    0.00       1/2           __shapfun_MOD_get_shape_funs [40]
+                0.00    0.00       1/1           __shapfun_MOD_tri_surface_pointers_sn [43]
+-----------------------------------------------
+                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_with_faces [42]
+[43]     0.0    0.00    0.00       1         __shapfun_MOD_tri_surface_pointers_sn [43]
+-----------------------------------------------
+                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[44]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [44]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
+-----------------------------------------------
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [44]
+[45]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
+                0.00    0.00       1/2           __shapfun_MOD_get_shape_funs [40]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn [46]
+-----------------------------------------------
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
+[46]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn [46]
+-----------------------------------------------
+                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[47]     0.0    0.00    0.00       1         __splitting_MOD_get_str_neig [47]
+-----------------------------------------------
+                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+[48]     0.0    0.00    0.00       1         __splitting_MOD_get_surface_ele [48]
+                0.00    0.00    6144/18432       __msh2tri_MOD_getneigdatamesh [27]
+-----------------------------------------------
+                0.00    0.00       1/1           __msh2tri_MOD_readmsh [4]
+[49]     0.0    0.00    0.00       1         __strings_MOD_delsubstr [49]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+   [1] MAIN__ (main.F90)      [41] __shapfun_MOD_get_shape_funs_spec [45] __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr
+  [13] __evaluate_MOD_evalexpr_dc [42] __shapfun_MOD_get_shape_funs_with_faces [46] __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn
+   [9] __generic_MOD_areequal2 [30] __shapfun_MOD_normgi  [47] __splitting_MOD_get_str_neig
+  [33] __generic_MOD_checkvector [35] __shapfun_MOD_semi_det_snlx [48] __splitting_MOD_get_surface_ele
+  [28] __generic_MOD_numloc    [8] __shapfun_MOD_semi_tri_det_nlx [10] __strings_MOD_compact
+   [5] __msh2tri_MOD_checkneig [37] __shapfun_MOD_shatrinew [49] __strings_MOD_delsubstr
+  [11] __msh2tri_MOD_get_d_center [38] __shapfun_MOD_shatriold [25] __strings_MOD_is_digit
+   [6] __msh2tri_MOD_get_length [12] __shapfun_MOD_tri_det_nlx [7] __strings_MOD_parse
+  [21] __msh2tri_MOD_get_splitting [43] __shapfun_MOD_tri_surface_pointers_sn [34] __strings_MOD_readline
+  [22] __msh2tri_MOD_get_str_info [39] __shapfun_MOD_triangles_tets_with_time [23] __strings_MOD_removebksl
+  [27] __msh2tri_MOD_getneigdatamesh [36] __shapfun_MOD_triquaold [14] __strings_MOD_split
+   [4] __msh2tri_MOD_readmsh  [31] __shapfun_MOD_xprod1   [26] __strings_MOD_value_dr
+  [32] __shapfun_MOD_det_snlx_all [24] __shapfun_unstruc_MOD_get_mass_stiff_diffvol [29] __strings_MOD_value_si
+  [40] __shapfun_MOD_get_shape_funs [44] __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [3] __transport_tri_semi_MOD_semi_implicit_iterative

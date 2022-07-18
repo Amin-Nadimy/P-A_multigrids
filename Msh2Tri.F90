@@ -1,0 +1,1010 @@
+module Msh2Tri
+    use strings
+    use Structures
+    use Generic
+    ! use ifport
+    implicit none
+
+
+    !Subroutine 1:
+	!Checks if the triangle is rectangle or almost rectangle
+	!meshL(in) :: type(Mesh)
+	!(Optional)tolerance(in) :: double. Tolerance: 1 => 90º
+	!									Default => 0.95  => 85,5º
+	!
+	!Subroutine 2:
+	!Checks if the triangles are rectangle or almost rectangle
+	!meshL(in) :: type(Mesh)(:)
+	!(Optional)tolerance(in) :: double. Tolerance: 1 => 90º
+	!									Default => 0.95  => 85,5º
+	!TRUE-> ONE OR MORE TRIANGLES ARE NOT ACUTE
+	interface CheckTriangleRec
+	    module procedure CheckTriangleRec_1
+	    module procedure CheckTriangleRec_2
+	end interface CheckTriangleRec
+
+contains
+
+
+  !@brief> this subroutine gets number of splitting (n) and ele and returns
+  ! ele row number and its position in the row
+  ! up striangles are 1 and downtriangles are 0
+  subroutine get_str_info(n_split, ele, irow, ipos, orientation)
+    ! sum_up:: sum of up tris between row 1 and (irow-1)
+
+    ! global vbls
+    integer, intent(in):: n_split, ele
+
+    ! local vbls
+    integer, INTENT(INOUT):: irow, ipos
+    integer ::  ele2, row, i, ele_row, orientation
+
+    i = ele
+    row=1
+    ele_row = 2**(n_split+1)-1
+
+    do while( i>=1 )
+      if (i>ele_row ) then
+        i = i - ele_row
+        row = row + 1
+        ele_row = ele_row -2
+      else
+        ipos = i
+        irow = row
+        exit
+      end if
+    end do
+
+    orientation = mod(ipos,2)
+
+  end subroutine get_str_info
+
+
+  ! @brief> this subroutine recieves an unstructured mesh (meshlist) and splits each ele 'n' times
+  ! and returns a semi_structured mesh
+  ! str_ele:: structured element which we want to get its coordinates
+  ! str_x(ndim,nloc):: coordinates of corner nodes of structured ele
+  !n_split::  number of splitting
+  !un_ele:: coordinates of parent unstructured element
+  subroutine get_splitting(un_x, n_split, str_ele, str_x)
+    ! External vbls
+    real(8), intent(in) :: un_x(2,3)
+    integer, intent(in):: n_split, str_ele
+
+    ! local vbl
+    real, intent(inout):: str_x(2,3)
+    real:: v1(2), v2(2)
+    integer:: irow, ipos, orientation
+
+    v1(1) = (un_x(1,1) - un_x(1,3))/(2**n_split)
+    v1(2) = (un_x(2,1) - un_x(2,3))/(2**n_split)
+    v2(1) = (un_x(1,2) - un_x(1,3))/(2**n_split)
+    v2(2) = (un_x(2,2) - un_x(2,3))/(2**n_split)
+
+    call get_str_info(n_split, str_ele, irow, ipos, orientation)
+
+
+    if ( mod(ipos,2)/=0 ) then
+      str_x(1,3) = un_x(1,3) + (irow-1) * v2(1) + (ipos/2) * v1(1)
+      str_x(2,3) = un_x(2,3) + (irow-1) * v2(2) + (ipos/2) * v1(2)
+
+      str_x(1,2) = un_x(1,3) + irow * v2(1) + (ipos/2) * v1(1)
+      str_x(2,2) = un_x(2,3) + irow * v2(2) + (ipos/2) * v1(2)
+
+      str_x(1,1) = un_x(1,3) + (irow-1) * v2(1) + v1(1) * (ipos/2+1)
+      str_x(2,1) = un_x(2,3) + (irow-1) * v2(2) + v1(2) * (ipos/2+1)
+
+    else
+      str_x(1,1) = un_x(1,3) + irow * v2(1) + v1(1) * (ipos/2-1)
+      str_x(2,1) = un_x(2,3) + irow * v2(2) + v1(2) * (ipos/2-1)
+
+      str_x(1,2) = un_x(1,3) + (irow-1) * v2(1) + v1(1) * (ipos/2)
+      str_x(2,2) = un_x(2,3) + (irow-1) * v2(2) + v1(2) * (ipos/2)
+
+      str_x(1,3) = un_x(1,3) + irow * v2(1) + v1(1) * (ipos/2)
+      str_x(2,3) = un_x(2,3) + irow * v2(2) + v1(2) * (ipos/2)
+    end if
+  end subroutine get_splitting
+
+
+
+  ! @brief> this subroutine recieves an unstructured mesh (meshlist) and splits each ele 'n' times
+  ! and returns a semi_structured mesh
+  ! str_ele:: structured element which we want to get its coordinates
+  ! str_x(ndim,nloc):: coordinates of corner nodes of structured ele
+  !n_split::  number of splitting
+  !un_ele:: coordinates of parent unstructured element
+  subroutine get_splitting_multigrid(un_x, n_split, str_ele, str_x)
+    ! External vbls
+    real(8), intent(in) :: un_x(2,3)
+    integer, intent(in):: n_split, str_ele
+
+    ! local vbl
+    real, intent(inout):: str_x(2,3)
+    real:: v1(2), v2(2)
+    integer:: irow, ipos, orientation
+
+    v1(1) = (un_x(1,1) - un_x(1,3))/(2**n_split)
+    v1(2) = (un_x(2,1) - un_x(2,3))/(2**n_split)
+    v2(1) = (un_x(1,2) - un_x(1,3))/(2**n_split)
+    v2(2) = (un_x(2,2) - un_x(2,3))/(2**n_split)
+
+    call get_str_info(n_split, str_ele, irow, ipos, orientation)
+
+
+    if ( mod(ipos,2)/=0 ) then
+      str_x(1,3) = un_x(1,3) + (irow-1) * v2(1) + (ipos/2) * v1(1)
+      str_x(2,3) = un_x(2,3) + (irow-1) * v2(2) + (ipos/2) * v1(2)
+
+      str_x(1,2) = un_x(1,3) + irow * v2(1) + (ipos/2) * v1(1)
+      str_x(2,2) = un_x(2,3) + irow * v2(2) + (ipos/2) * v1(2)
+
+      str_x(1,1) = un_x(1,3) + (irow-1) * v2(1) + v1(1) * (ipos/2+1)
+      str_x(2,1) = un_x(2,3) + (irow-1) * v2(2) + v1(2) * (ipos/2+1)
+
+    else
+      str_x(1,1) = un_x(1,3) + irow * v2(1) + v1(1) * (ipos/2-1)
+      str_x(2,1) = un_x(2,3) + irow * v2(2) + v1(2) * (ipos/2-1)
+
+      str_x(1,2) = un_x(1,3) + (irow-1) * v2(1) + v1(1) * (ipos/2)
+      str_x(2,2) = un_x(2,3) + (irow-1) * v2(2) + v1(2) * (ipos/2)
+
+      str_x(1,3) = un_x(1,3) + irow * v2(1) + v1(1) * (ipos/2)
+      str_x(2,3) = un_x(2,3) + irow * v2(2) + v1(2) * (ipos/2)
+    end if
+  end subroutine get_splitting_multigrid
+
+
+  ! brief:: this subroutine gets displacement vector v1 and v2 based on un_ele
+  ! and return local coordinates on str_ele
+  ! subroutine get_x_loc(x_loc, ipos, irow, updown, v1, v1,str_ele)
+  !   implicit none
+  !   !global vbl
+  !   integer, intent(in) :: str_ele, ipos, irow, updown
+  !   real, intent(in), dimension(:) :: v1, v2
+  !   real, dimension(:,:), intent(inout) :: x_loc
+  !
+  !   x_loc(ndim,nloc)
+  ! end subroutine get_x_loc
+
+  !Reads the information of a msh ascii file generated by gmsh and stores
+  !it in a Mesh type structure. Includes information of the neigbours of each triangle
+  !meshList(out) :: type(Mesh)(:)
+  !ierr(out) :: integer. If /= 0 then a problem happend while reading the file
+  !(Optional)filename(in) :: string with the relative path to the .msh file.
+  ! nodes1:: total nodes in the domain (continuous finite elemenet)
+  !							By DEFAULT: input.msh
+  subroutine ReadMSH(meshList,filename,ierr, nodes1)
+      Implicit none
+      !Global variables
+      type(Mesh), intent(out), allocatable, dimension(:) :: meshList
+      character (len = *), optional, intent(in) :: filename
+      integer , intent(out) :: ierr
+      integer, INTENT(OUT) :: nodes1
+      !Local variables
+      character(len=500) :: filex, cadena, delim,path
+      character(len=200),dimension(100) :: parsed
+      integer :: i, j, aux, type, pos, xp1,xp2,xp3, Io, nodes, region_id
+      real :: l_d, d1,d2,d3
+      !xp(ndim,3)
+      integer:: x(2,3), no_neig
+      double precision :: daux,daux2, daux3
+      real (kind = 8), allocatable, dimension(:,:) :: vertex !(X,Y)
+      type(Mesh), allocatable, dimension(:) :: meshList2
+
+      l_d = 0.0
+      !Prepare data
+      delim = " "
+      filex = "input.msh"
+      if (present(filename)) then
+        filex = filename
+        !Check the .msh
+        i = index(filex, ".msh")
+        if (i==0) then
+            call insertstr(filex,".msh",len_trim(filex)+1)
+        end if
+      end if
+
+      !Open directory
+      Io = getCWD (path)
+      !To avoid using debug as working directory
+      call delsubstr(path,"/Debug")
+      path = trim(path)//"/"//trim(filex)
+      open(1,file = trim(path), status="old", action = "read")
+
+      !call readline(1,aux,i)
+      !Check type file
+      !First line: $MeshFormat
+      call readline(1,cadena,ierr)
+      if (cadena /= "$MeshFormat") return
+      !Second line
+      call readline(1,cadena,ierr)
+      call parse(cadena, delim, parsed, aux)
+      !First number is the version number, it must be 2.2
+      call value(parsed(1),daux,ierr)
+      if (daux < 2d0 .or. daux > 2.2d0) print *,"The .msh version archive",daux,"do not math (2.2), this may cause troubles"
+      !Second number is to check that we are trating with the .msh ascii archive
+      call value(parsed(2),aux,ierr)
+      if (aux /= 0) then
+        print *, ".msh binary archive type. Please use the .msh ascii type"
+        return
+      end if
+      !Ignore until the begining of the nodes part
+      do while (cadena /= "$Nodes")
+        call readline(1,cadena,ierr)
+      end do
+      !Read number of nodes to allocate
+      call readline(1,cadena,ierr)
+      call value(cadena,nodes,ierr)
+      nodes1 = nodes
+      if (ierr == 0) then
+        allocate(vertex(nodes,3))
+      else
+        print *,"Error while reading the number of nodes in the .msh archive"
+        return
+      end if
+
+      !Start to store the input data
+        !The information is stored as follows:
+        !First number: integer -> Node number
+        !Second number: double -> X coordinate
+        !Third number: double -> Y coordinate
+        !Forth number: double -> Z coordinate
+        !As we are in 2d we will only read the X and the Y
+
+      do i = 1, nodes
+        !Readline
+        call readline(1,cadena,ierr)
+        !Split
+        call parse(cadena, delim, parsed, aux)
+        !Node number
+        call value(parsed(1), aux, ierr)
+        !X coordinate
+        call value(parsed(2), daux, ierr)
+        !Y coordinate
+        call value(parsed(3), daux2, ierr)
+        !Z coordinate
+        call value(parsed(4), daux3, ierr)
+
+
+        if (ierr == 0) then
+          vertex(aux,1)=daux
+          vertex(aux,2)=daux2
+          vertex(aux,3)=daux3
+        else
+          print *,"Error while reading the nodes in the .msh archive"
+          return
+        end if
+      end do
+
+      !Read until the definition of the triangles
+      do while (cadena /= "$Elements")
+        call readline(1,cadena,ierr)
+      end do
+      !Store the number of triangles
+      call readline(1,cadena,ierr)
+      ! Amin :: hear nodes should be elements
+      call value(cadena,nodes,ierr)
+
+      if (ierr == 0) then
+        allocate(meshList2(nodes))
+      else
+        print *,"Error while reading the number of triangles in the .msh archive"
+        return
+      end if
+      j = 0
+
+      !This method only reads triangles, and will store just the vertex
+      do i = 1, nodes
+        !Readline
+        call readline(1,cadena,ierr)
+        !Split
+        call parse(cadena, delim, parsed, aux)
+        !Element number
+        call value(parsed(1), pos, ierr)
+        !Element type
+        call value(parsed(2), type, ierr)
+
+        !Check if it is a triangle
+        if (.not.(type == 23 .or. type == 21 .or. type == 20 .or.&
+            type == 9 .or. type == 2 .or. type == 24 .or. type == 25)) then
+          j = j + 1
+          !Ignore this data
+          cycle
+        end if
+        !Number of tags(information that will follow and we are not interested in, hence we will skip it)
+        call value(parsed(3), aux, ierr)
+        !region id
+        call value(parsed(4), region_id, ierr)
+        !Xp1 vertex
+        call value(parsed(4 + aux), xp1, ierr)
+        !Xp2 vertex
+        call value(parsed(5 + aux), xp2, ierr)
+        !Xp3 vertex
+        call value(parsed(6 + aux), xp3, ierr)
+
+        if (ierr == 0) then
+          meshList2(pos)%region_id = region_id
+          !Xp1
+          meshList2(pos)%X(1,1)=vertex(Xp1,1)
+          meshList2(pos)%X(2,1)=vertex(Xp1,2)
+          !Xp2
+          meshList2(pos)%X(1,2)=vertex(Xp2,1)
+          meshList2(pos)%X(2,2)=vertex(Xp2,2)
+          !Xp3
+          meshList2(pos)%X(1,3)=vertex(Xp3,1)
+          meshList2(pos)%X(2,3)=vertex(Xp3,2)
+          ! meshlist2(pos)%Nindex(1)=xp1
+          ! meshlist2(pos)%Nindex(2)=xp2
+          ! meshlist2(pos)%Nindex(3)=xp3
+          ! l_d is the largest side of all faces
+
+          call get_length(vertex(Xp1,1),vertex(Xp1,2),vertex(Xp3,1),vertex(Xp3,2), d1)
+          call get_length(vertex(Xp1,1),vertex(Xp1,2),vertex(Xp2,1),vertex(Xp2,2), d2)
+          call get_length(vertex(Xp2,1),vertex(Xp2,2),vertex(Xp3,1),vertex(Xp3,2), d3)
+          if ( d1>l_d )l_d = d1
+          if ( d2>l_d )l_d = d2
+          if ( d3>l_d )l_d = d3
+
+        else
+          print *,"Error while reading the elements in the .msh archive"
+          return
+        end if
+      end do
+
+      !Store data in meshList
+      allocate(meshList(nodes - j))
+      do i = j + 1, nodes
+          meshList(i - j) = meshList2(i)
+          !Initialize to zero the default data of the neighbours
+          meshList(i - j)%neig = 0
+          meshList(i - j)%Dir = .false.
+
+          ! meshlist(i - j)%Nindex=meshList2(i)%Nindex
+      end do
+
+
+      ! !Look for neighbours
+      do i = 1, size(meshList,1)
+        no_neig = 0
+          do j = i + 1, size(meshList,1)
+              call CheckNeig(meshList,i,j, no_neig, l_d)
+              ! print*, j, no_neig
+              if (no_neig==3) exit
+          end do
+      end do
+      close(1)
+
+    deallocate(meshList2)
+  end subroutine ReadMSH
+
+
+  subroutine get_length(x1,y1,x2,y2, length)
+    implicit none
+    !global vbl
+    double precision, intent(in) :: x1,y1,x2,y2
+    real, intent(out) :: length
+
+    length = SQRT((x2-x1)**2 + (y2-y1)**2)
+
+  end subroutine get_length
+
+  ! this subroutine finds the center of each unstr_ele and distance between Mpos and Npos
+  ! Mx and Nx are my center and my neig center
+  subroutine get_d_center(MeshList,un_ele, Npos, iface, nface, nloc, n_split,str_neig)
+    implicit none
+    ! external vbl
+    type(Mesh), dimension(:), INTENT(INOUT) :: meshList
+    integer, intent(in) :: un_ele, Npos, iface, nface, nloc, n_split, str_neig(:,:)
+    ! local vbl
+    integer :: i
+    real:: str_x1(2,3), str_x2(2,3), c1(2),c2(2)
+
+    meshList(un_ele)%center(1) = sum(meshList(un_ele)%X(1,:))/3
+    meshList(un_ele)%center(2) = sum(meshList(un_ele)%X(2,:))/3
+
+    ! for unstructured elements ########################################
+    if ( Npos==0 ) then
+      ! Amin I can come up with something here if neighbouring is zero
+      ! it is not quit correct!! just written for the sake of calculations
+      if ( iface==1 ) then
+        c1(1) = (meshList(un_ele)%X(1,1) + meshList(un_ele)%X(1,3)) /2
+        c2(2) = (meshList(un_ele)%X(2,1) + meshList(un_ele)%X(2,3)) /2
+        MeshList(un_ele)%dc_unele(iface) = ((meshList(un_ele)%center(1)-c1(1))**2 +&
+                                            (meshList(un_ele)%center(2)-c1(2))**2)**0.5
+      end if
+    else
+      MeshList(un_ele)%dc_unele(iface) = ((sum(meshList(un_ele)%X(1,:))/3-sum(meshList(Npos)%X(1,:))/3)**2+&
+                                          (sum(meshList(un_ele)%X(2,:))/3- (sum(meshList(Npos)%X(2,:))/3))**2)**0.5
+    end if
+
+    ! for structured inner elemnts #####################################
+    call get_splitting(meshlist(un_ele)%X, n_split, 2, str_x1)
+    c1(1) = sum(str_x1(1,:))/nloc; c1(2) = sum(str_x1(2,:))/nloc
+    do i=1,nface
+      call get_splitting(meshlist(un_ele)%X, n_split, str_neig(i,2), str_x2)
+      c2(1) = sum(str_x2(1,:))/nloc; c2(2) = sum(str_x2(2,:))/nloc
+      meshList(un_ele)%dc_str_ele(i) = sqrt( (c1(1)-c2(1))**2 + (c1(2)-c2(2))**2 )
+    end do
+
+end subroutine get_d_center
+
+
+  !Checks if the triangle is rectangle or almost rectangle
+  !MeshList(in) :: type(Mesh)
+  !(Optional)tolerance(in) :: double. Tolerance: 1 => 90º
+  !									Default => 0.95  => 85,5º
+  logical function CheckTriangleRec_1(MeshList, tolerance)
+    Implicit none
+    !Global variables
+    type(Mesh), intent(in):: MeshList
+    double precision, optional, intent (in) :: tolerance
+    !Local variables
+    double precision :: alpha1, alpha2, MaxAngle, tol, l1, l2, l3, alpha3
+        !Definition of Pi
+        double precision, parameter :: pi = acos(0.d0) * 2d0
+        !Prepare data
+
+        tol = 0.95d0
+        if (present(tolerance)) tol = tolerance
+
+    MaxAngle = pi/2d0*tol
+
+    CheckTriangleRec_1 = .false.
+
+        !Left boundary of the triangle
+        l1 = sqrt(abs(meshList%X(1,1)-meshList%X(1,3))**2+abs(meshList%X(2,1)-meshList%X(2,3))**2)
+        !Down boundary of the triangle
+        l2 = sqrt(abs(meshList%X(1,1)-meshList%X(1,2))**2+abs(meshList%X(2,1)-meshList%X(2,2))**2)
+        !Rigth boundary of the triangle
+        l3 = sqrt(abs(meshList%X(1,2)-meshList%X(1,3))**2+abs(meshList%X(2,2)-meshList%X(2,3))**2)
+        !Alphas
+        alpha2 = acos((l3*l3+l2*l2-l1*l1)/(2.d0*l3*l2))
+        alpha1 = acos((l1*l1+l2*l2-l3*l3)/(2.d0*l1*l2))
+        alpha3 = pi - alpha1-alpha2
+        if (alpha1>=MaxAngle .or. alpha2>= MaxAngle .or. alpha3 >= MaxAngle) then
+      print *, "Triangle rectangle!"
+      CheckTriangleRec_1 = .true.
+      return
+        end if
+  end function
+  !
+  ! !Checks if the triangles are rectangle or almost rectangle
+  ! !meshL(in) :: type(Mesh)
+  ! !(Optional)tolerance(in) :: double. Tolerance: 1 => 90º
+  ! !									Default => 0.95  => 85,5º
+  logical function CheckTriangleRec_2(meshL, tolerance)
+    Implicit none
+    !Global variables
+    type(Mesh), intent(in), dimension(:):: meshL
+    double precision, optional, intent (in) :: tolerance
+    !Local variables
+    integer  :: k
+    double precision :: tol
+    !Prepare data
+    tol = 0.95d0
+        if (present(tolerance)) tol = tolerance
+        CheckTriangleRec_2 = .false.
+    do k = 1, size(meshL)
+        if (CheckTriangleRec_1(meshL(k),tol)) then
+            CheckTriangleRec_2=.true.
+            return
+        end if
+    end do
+  end function
+
+
+
+  !@brief> it return neighbour number, its face number and local nodes number on the face
+  subroutine getNeigDataMesh(meshL, Mpos, side, Npos, Nside, Nnodes)
+  Implicit none
+  ! Npos:: neighbouring ele no
+  ! Nside:: neighbouring ele side which is shared with current ele
+  ! Nnodes:: node numbers of neighbouring elelemnts on Nside
+  !Global variables
+  type(Mesh), intent(in), dimension(:) :: meshL
+  integer, intent(in) :: Mpos, side
+  integer, intent(out) ::  Nside, Npos
+  integer, intent(out), dimension(2) :: Nnodes
+
+  Nside = 0
+  Npos = meshL(Mpos)%neig(side)
+
+  if (Npos/=0) then
+    Nside = NumLoc(meshL(Npos)%Neig, Mpos)
+    if (meshL(Mpos)%dir(side)) then
+      select case (Nside)
+        case (1)
+          !Store stencils
+          !Xp1
+          Nnodes(1) = 1
+          !Xp3
+          Nnodes(2) = 3
+
+        case (2)
+          !Store stencils
+          !Xp1
+          Nnodes(1) = 1
+          !Xp2
+          Nnodes(2) = 2
+
+        case (3)
+          !Store stencils
+          !Xp2
+          Nnodes(1) = 2
+
+          !Xp3
+          Nnodes(2) = 3
+      end select
+    else
+      select case (Nside)
+        case (1)
+          !Store stencils
+          !Xp3
+          Nnodes(1) = 3
+          !Xp1
+          Nnodes(2) = 1
+
+        case (2)
+          !Store stencils
+          !Xp2
+          Nnodes(1) = 2
+          !Xp1
+          Nnodes(2) = 1
+
+        case (3)
+          !Store stencils
+          !Xp3
+          Nnodes(1) = 3
+          !Xp2
+          Nnodes(2) = 2
+      end select
+    end if
+  else
+    ! Nside = NumLoc(meshL(Npos)%Neig, Mpos)
+    ! u got error later on
+    ! it is ok to comment out Nnodes=0 and uncomment the select case below instead
+    ! Nnodes=0
+      select case (side)
+        case (1)
+          !Store stencils
+          !Xp1
+          Nnodes(1) = 1
+          !Xp3
+          Nnodes(2) = 3
+
+        case (2)
+          !Store stencils
+          !Xp1
+          Nnodes(1) = 1
+          !Xp2
+          Nnodes(2) = 2
+
+        case (3)
+          !Store stencils
+          !Xp2
+          Nnodes(1) = 2
+
+          !Xp3
+          Nnodes(2) = 3
+      end select
+  end if
+
+end subroutine getNeigDataMesh
+
+
+
+
+
+
+	!Reads the information generated by the aCute software given a .poly file
+	!meshList(out) :: type(Mesh)(:)
+	!ierr(out) :: integer. If /= 0 then a problem happend while reading the file
+	!remove(in) :: logical. If true, then the .ele and the .node will be erased, as well as the .1.poly.
+	!(Optional)filename(in) :: string with the relative path to the .poly file.
+	!							By DEFAULT: input
+	!(Optional)subiteration(in) :: integer. ACute creates different archives deppending on the iteration.
+	! !							By DEFAULT: 1 or none
+	! subroutine ReadPoly(meshL,ierr, remove,filename, subiteration)
+  !       Implicit none
+	!     !Global variables
+	! 	type(Mesh), intent(out), allocatable, dimension(:) :: meshL
+	! 	character (len = *), optional, intent(in) :: filename
+	! 	integer, intent(out) :: ierr
+	! 	integer,optional, intent(in) :: subiteration
+	! 	logical, intent(in) :: remove
+	! 	!Local variables
+	! 	character(len=500) :: ele, cadena, node, filex, path
+	! 	character(len=2) :: delim
+	! 	character(len=100),dimension(30) :: parsed
+	! 	integer :: i, aux, Io
+	! 	logical :: bol
+	! 	double precision :: daux
+	! 	double precision, allocatable, dimension(:,:) :: vertex !(2,:)(X,Y)
+	! 	!Prepare data
+	! 	delim = " "
+	! 	filex = "input"!.poly"
+  !
+	! 	if (present(filename)) then
+	! 	    filex = filename
+	! 	    !Remove the .poly
+	! 	    call delall(filex, ".poly")
+	! 	end if
+	! 	if(present(subiteration))then
+	! 		call writenum(subiteration,cadena,"i5")
+	! 		!Create .ele link
+	! 		ele = trim(filex)//trim(cadena)//".ele"
+	! 		!Create .node link
+	! 		node = trim(filex)//trim(cadena)//".node"
+	! 	else
+	! 		!Create .ele link
+	! 		ele = trim(filex)//".1.ele"
+	! 		inquire( file=ele, exist=bol)
+	! 		if (.not.bol) then
+	! 		    ele = trim(filex)//".ele"
+	! 		end if
+  !
+	! 		!Create .node link
+	! 		node = trim(filex)//".1.node"
+	! 		inquire( file=node, exist=bol)
+	! 		if (.not.bol) then
+	! 		    node = trim(filex)//".node"
+	! 		end if
+  !
+	! 	end if
+	! 	!****At first i will store the coordinates****
+	! 	!Open directory
+	! 	Io = getCWD (path)
+	! 	!To avoid using debug as working directory
+	! 	call delsubstr(path,"/Debug")
+	! 	path = trim(path)//"/"//trim(node)
+	! 	open(1,file = trim(path), status="old", action = "read")
+  !
+	! 	call readline(1,cadena,ierr)
+	! 	!Get the number of vertex
+	! 	call parse(cadena, delim, parsed, aux)
+	! 	!I am only interested in the first number, wich is the total number of vertex
+	! 	call value(parsed(1),aux,ierr)
+	! 	allocate(vertex(2,aux))
+  !
+	! 	!Store all the coordinates
+	! 	do i = 1, aux
+	! 		!Now read line by line including the data
+	! 		call readline(1,cadena,ierr)
+	! 		!Split cadena
+	! 		call parse(cadena, delim, parsed, aux)
+	! 		!We are only interested in the second number, wich is the X
+	! 		call value(parsed(2),daux,ierr)
+	! 		vertex(1,i) = daux
+	! 		!And in the third, wich is the Y
+	! 		call value(parsed(3),daux,ierr)
+	! 		vertex(2,i) = daux
+	! 	end do
+	! 	close(1)
+  !
+	! 	!****By reading the .ele file we will create the meshList****
+	! 	!Open directory
+	! 	Io = getCWD (path)
+	! 	!To avoid using debug as working directory
+	! 	call delsubstr(path,"/Debug")
+	! 	path = trim(path)//"/"//trim(ele)
+	! 	open(1,file = trim(path), status="old", action = "read")
+  !
+	! 	call readline(1,cadena,ierr)
+	! 	!Get the number of triangles
+	! 	call parse(cadena, delim, parsed, aux)
+	! 	!I am only interested in the first number, which is the total number of triangles
+	! 	call value(parsed(1),aux,ierr)
+	! 	allocate(meshL(aux))
+	! 	!Set initially all neigbours to zero
+	! 	do i = 1, size(meshL,1)
+	!     	meshL(i)%Neig(:) = 0
+	! 	end do
+	! 	!Store the triangles
+	! 	do i = 1, aux
+	! 		!Now read line by line including the data
+	! 		call readline(1,cadena,ierr)
+	! 		!Get split cadena
+	! 		call parse(cadena, delim, parsed, aux)
+	! 		!We are interested in the second number
+	! 		call value(parsed(2),aux,ierr)
+	! 		meshL(i)%Xp1=vertex(:,aux)
+	! 		!The third
+	! 		call value(parsed(3),aux,ierr)
+	! 		meshL(i)%Xp2=vertex(:,aux)
+	! 		!And the forth
+	! 		call value(parsed(4),aux,ierr)
+	! 		meshL(i)%Xp3=vertex(:,aux)
+	! 	end do
+	! 	close(1)
+
+	! 	!****Look for neighbours****
+	! 	!Despite we can use aCute to get the neighbours, and it is probably faster,
+	! 	!it will not tell us the direction between two together triangles
+	! 	do i = 1, size(meshL,1)
+	! 	    do aux = i + 1, size(meshL,1)! subroutine CheckNeig(ml, i, j)
+	! 	        call CheckNeig(meshL,i,aux)
+	! 	    end do
+	! 	end do
+  !
+	! 	!*****ONLY WORK FOR LINUX!?*****
+	! 	!Removal of unnecessary files
+	! 	if (remove .and..not.(present(subiteration))) then
+	! 		!Linux
+	! 		!get current working directory
+	! 		Io = getcwd(filex)
+	! 		!To avoid using debug as working directory
+	! 		call delsubstr(filex,"/Debug")
+	! 		i = index(filex, "/")
+	! 		if (i/=0) then
+	! 			filex = trim(filex)//"/"
+	! 		else!Windows?
+	! 			i = index(filex, "\")
+	! 			if (i/=0) filex = trim(filex)//"\"!Windows
+	! 		end if
+	! 		!Remove .ele
+	! 		cadena = "rm "//trim(filex)//trim(ele)
+	! 		!Remove .node
+	! 		cadena = trim(cadena)//" "//trim(filex)//trim(node)
+	! 		i = system(trim(cadena))
+	! 		!If .1.poly exists then remove it as well
+	! 		i = index(ele, ".1.ele")!I check with this one because is easier
+	! 		if (i/=0) then
+	! 			cadena = trim(filename)
+	! 			call delall(cadena, ".poly")
+	! 			cadena = trim(cadena)//".1.poly"
+	! 			cadena = "rm "//trim(filex)//trim(cadena)
+	! 			i = system(trim(cadena))
+	! 		end if
+	! 	end if
+  !
+	! end subroutine ReadPoly
+
+	!Given a poly archive, this subroutine calls aCute and creates the .node and .ele archive
+	!Poly(in) :: Character(:). Filename
+	!(Optional)minAngle(in):: Double. Minimum angle. By default 5º
+	!(Optional)maxAngle(in):: Double. Maximum angle By default 85º
+	!(Optional)printInf(in):: Logical. If true then prints the information of the meshing. Default -> false.
+	!NOTE: Now this call the terminal, therefore if works only in Linux
+	! subroutine aCuteLink(poly,minAngle,maxAngle,printInf)
+	!     Implicit none
+	!     !Global variables
+	!     character(len=*), intent(in) :: poly
+	!     double precision, optional, intent(in) :: minAngle, maxAngle
+	!     logical, optional, intent(in) :: printInf
+	!     !Local variables
+	!     double precision :: mn, mx
+	!     integer :: i, Io
+	!     logical :: prnt
+	! 	character(len=800) :: command, poly2, path
+	! 	character(len=50) :: cadena1,cadena2
+	!     !Prepare data
+	!     mn = 5.d0
+	!     mx = 85.d0
+	!     if(present(minAngle)) mn = minAngle
+	!     if(present(maxAngle)) mx = maxAngle
+	! 	prnt = .false.
+	! 	if (present(printInf)) prnt = printInf
+  !
+	! 	call writenum(mn,cadena1,"F16.8")
+	! 	call writenum(mx,cadena2,"F16.8")
+  !
+	! 	poly2 = poly
+	! 	io = getcwd(command)
+	! 	!To avoid using debug as working directory
+	! 	call delsubstr(command,"/Debug")
+  !
+	! 	i = index(poly, ".poly")
+	! 	if (i==0) poly2 = trim(poly)//".poly"
+  !
+	! 	Io = getCWD (path)
+	! 	!To avoid using debug as working directory
+	! 	call delsubstr(path,"/Debug")
+	! 	path = trim(path)//"/"//trim(poly2)
+	! 	open(1,file = trim(path), status="old", action = "read")
+  !
+	! 	if (prnt) then
+	! 		command = trim(command)//"/acute -q"//trim(cadena1)//" -U"//trim(cadena2)//" -V "//trim(path)
+	! 	else
+	! 		command = trim(command)//"/acute -q"//trim(cadena1)//" -U"//trim(cadena2)//" -Q "//trim(path)
+	! 	end if
+  !
+	! 	i = system (trim(command))
+  !
+	! end subroutine aCuteLink
+
+
+
+
+	!Returns true if the input triangles of the mesh list are neighbours
+	!ml(inout) :: type(Mesh)(:)
+	!i(in) :: integer
+	!j(in) :: integer
+  !l_d is the lasget face length
+	!Return: logical
+	subroutine CheckNeig(ml, i, j, no_neig, l_d)
+		Implicit none
+		!Global variables
+		type(Mesh), intent(inout), dimension(:) :: ml
+		integer, intent(in) :: j,i
+    real, intent(in) :: l_d
+		!Local variables
+		integer, dimension(4) :: Vertex
+    integer , intent(inout):: no_neig
+    real :: d_node
+    integer :: counter, inode, jnode
+		logical :: oneMatch, twoMatch, threeMatch, oneMatch2, twoMatch2, threeMatch2
+		!Initialize variables
+		oneMatch = .false.
+		twomatch = .false.
+		threematch = .false.
+		oneMatch2 = .false.
+		twomatch2 = .false.
+		threematch2 = .false.
+
+		Vertex = 0
+		!Vertex goes from Xp1 to Xp3 of both triangles
+		!The forth is just to check that 2 vertex coincides
+		!Which means that they do not have a pair
+
+    counter = 0
+    do inode = 1,3
+      do jnode = 1,3
+        call get_length(ml(i)%X(1,inode), ml(i)%X(2,inode),ml(j)%X(1,jnode), ml(j)%X(2,jnode), d_node)
+        if ( d_node > l_d ) then
+          counter = counter +1
+        end if
+        if (counter > 2 ) exit
+      end do
+      if (counter > 2 ) exit
+    end do
+
+
+    if ( counter < 2 ) then
+  		!Check Xp1 of i triangle
+  		if (AreEqual(ml(i)%X(:,1),ml(j)%X(:,1))) then
+  			vertex(1) = 1
+  			oneMatch = .true.
+  			oneMatch2 = .true.
+  		else if (AreEqual(ml(i)%X(:,1),ml(j)%X(:,2))) then
+  			vertex(1) = 2
+  			oneMatch = .true.
+  			twoMatch2 = .true.
+  		else if (AreEqual(ml(i)%X(:,1),ml(j)%X(:,3))) then
+  			vertex(1) = 3
+  			oneMatch = .true.
+  			threeMatch2 = .true.
+  		end if
+
+  		!Check Xp2 of i triangle
+  		if (AreEqual(ml(i)%X(:,2),ml(j)%X(:,1))) then
+  			vertex(2) = 2
+  			twomatch = .true.
+  			oneMatch2 = .true.
+  		else if (AreEqual(ml(i)%X(:,2),ml(j)%X(:,2))) then
+  			vertex(2) = 5
+  			twomatch = .true.
+  			twoMatch2 = .true.
+  		else if (AreEqual(ml(i)%X(:,2),ml(j)%X(:,3))) then
+  			vertex(2) = 6
+  			twomatch = .true.
+  			threeMatch2 = .true.
+  		end if
+
+  		!Check Xp3 of i triangle
+  		if (AreEqual(ml(i)%X(:,3),ml(j)%X(:,1))) then
+  			vertex(3) = 3
+  			threematch = .true.
+  			oneMatch2 = .true.
+  		else if (AreEqual(ml(i)%X(:,3),ml(j)%X(:,2))) then
+  			vertex(3) = 6
+  			threematch = .true.
+  			twoMatch2 = .true.
+  		else if (AreEqual(ml(i)%X(:,3),ml(j)%X(:,3))) then
+  			vertex(3) = 9
+  			threematch = .true.
+  			threeMatch2 = .true.
+  		end if
+
+      !		!Check Xp1 of i triangle
+      !		if (AreEqual(ml(i)%Xp1,ml(j)%Xp1) .or.AreEqual(ml(i)%Xp1,ml(j)%Xp2)&
+      !			.or. AreEqual(ml(i)%Xp1,ml(j)%Xp3)) oneMatch = .true.
+      !
+      !		!Check Xp2 of i triangle
+      !		if (AreEqual(ml(i)%Xp2,ml(j)%Xp1) .or.AreEqual(ml(i)%Xp2,ml(j)%Xp2)&
+      !			.or. AreEqual(ml(i)%Xp2,ml(j)%Xp3)) twomatch = .true.
+      !
+      !		!Check Xp3 of i triangle
+      !		if (AreEqual(ml(i)%Xp3,ml(j)%Xp1) .or.AreEqual(ml(i)%Xp3,ml(j)%Xp2)&
+      !			.or. AreEqual(ml(i)%Xp3,ml(j)%Xp3)) threematch = .true.
+
+  		!Store neighbour
+  		if (oneMatch .and. threeMatch) then
+  			ml(i)%Neig(1)=j
+        no_neig = no_neig + 1
+
+  			if (checkvector(vertex,1) .or.( CheckVector(vertex,2) .and. CheckVector(vertex,9)) ) then
+  			    ml(i)%Dir(1) = .true.
+  			end if
+  			threeMatch = .false.
+  	 	else if (oneMatch .and. twoMatch) then
+  			ml(i)%Neig(2)=j
+        no_neig = no_neig + 1
+
+  			if (checkvector(vertex,1) .or.( CheckVector(vertex,6) .and. CheckVector(vertex,2)) ) then
+  			    ml(i)%Dir(2) = .true.
+  			end if
+  			onematch = .false.
+  		else if (threeMatch .and. twoMatch) then
+  			ml(i)%Neig(3)=j
+        no_neig = no_neig + 1
+
+  			if (checkvector(vertex,9) .or.( CheckVector(vertex,6) .and. CheckVector(vertex,2)) ) then
+  			    ml(i)%Dir(3) = .true.
+  			end if
+  			twomatch = .false.
+  		end if
+
+  		!Store neighbour in neighbour
+  		if (oneMatch2 .and. threeMatch2) then
+  			ml(j)%Neig(1)=i
+  		 	if (OneMatch) then
+  		 		ml(j)%Dir(1) = ml(i)%Dir(1)
+   	    else if (TwoMatch) then
+   	    	ml(j)%Dir(1) = ml(i)%Dir(2)
+        else if (ThreeMatch) then
+        	ml(j)%Dir(1) = ml(i)%Dir(3)
+  		 	end if
+
+  	 	else if (oneMatch2 .and. twoMatch2) then
+  			ml(j)%Neig(2)=i
+  		 	if (OneMatch) then
+  		 		ml(j)%Dir(2) = ml(i)%Dir(1)
+   	    else if (TwoMatch) then
+   	    	ml(j)%Dir(2) = ml(i)%Dir(2)
+        else if (ThreeMatch) then
+        	ml(j)%Dir(2) = ml(i)%Dir(3)
+  		 	end if
+  		else if (threeMatch2 .and. twoMatch2) then
+  			ml(j)%Neig(3)=i
+  		 	if (OneMatch) then
+  		 		ml(j)%Dir(3) = ml(i)%Dir(1)
+   	    else if (TwoMatch) then
+   	    	ml(j)%Dir(3) = ml(i)%Dir(2)
+        else if (ThreeMatch) then
+        	ml(j)%Dir(3) = ml(i)%Dir(3)
+  		 	end if
+  		end if
+    end if
+    !		!******If they are neighbours then we have to******
+    !		!******save the data as well in the neighbour triangle******
+    !		if (neig) then
+    !			!Initialize variables
+    !			oneMatch = .false.
+    !			twomatch = .false.
+    !			threematch = .false.
+    !			!Check Xp1 of j triangle
+    !			if (AreEqual(ml(j)%Xp1,ml(i)%Xp1) .or.AreEqual(ml(j)%Xp1,ml(i)%Xp2)&
+    !			.or. AreEqual(ml(j)%Xp1,ml(i)%Xp3)) oneMatch = .true.
+    !
+    !			!Check Xp2 of j triangle
+    !			if (AreEqual(ml(j)%Xp2,ml(i)%Xp1) .or.AreEqual(ml(j)%Xp2,ml(i)%Xp2)&
+    !			.or. AreEqual(ml(j)%Xp2,ml(i)%Xp3)) twomatch = .true.
+    !
+    !			!Check Xp1 of j triangle
+    !			if (AreEqual(ml(j)%Xp3,ml(i)%Xp1) .or.AreEqual(ml(j)%Xp3,ml(i)%Xp2)&
+    !			.or. AreEqual(ml(j)%Xp3,ml(i)%Xp3)) threematch = .true.
+    !
+    !			!Store neighbour
+    !			if (oneMatch .and. threeMatch) then
+    !				ml(j)%Neig(1)= i
+    !			else if (oneMatch .and. twoMatch) then
+    !				ml(j)%Neig(2)= i
+    !			else if (threeMatch .and. twoMatch) then
+    !				ml(j)%Neig(3)= i
+    !			end if
+    !		end if
+
+	end subroutine CheckNeig
+
+end module Msh2Tri
