@@ -299,6 +299,10 @@ module transport_tri_semi
         ! do its=1,nits
           do multigrid=1,n_multigrid
             do ilevel=1,multi_levels
+              tracer(ilevel)%tnew = 0.0
+              tnew_nonlin = 0.0
+              if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+              allocate(tnew_nonlin(nloc,4**(n_split-ilevel+1),totele_unst))
 
               call smoother
 
@@ -307,14 +311,14 @@ module transport_tri_semi
 
               call restrictor(tracer,totele_unst, n_split, ilevel) ! it must be n_split NOT n_split-ilevel+1
 
-! if ( ilevel==2 .and. itime==5 ) then
-! print*, 'average residuale',tracer(1)%residuale(1,1,5),tracer(1)%residuale(2,1,5),tracer(1)%residuale(3,1,5)
-! print*, 'next', tracer(2)%RHS(3,1,5)
-! print*, ''
-! end if
-
+              call get_residual
 
             end do ! ilevel multigrids
+
+
+            do ilevel = multi_levels-1,1,-1
+
+            end do !ilevel
           end do ! solve_its
         print*, 'semi', itime
       end do ! do itime=1,ntime
@@ -472,13 +476,9 @@ module transport_tri_semi
 
 
       subroutine smoother
-        if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
         if (allocated(tnew_nonlin_loc2)) deallocate(tnew_nonlin_loc2)
-
-        allocate(tnew_nonlin(nloc,4**(n_split-ilevel+1),totele_unst))
         allocate(tnew_nonlin_loc2(nloc,4**(n_split-ilevel+1),totele_unst,nface))
-        tracer(ilevel)%tnew = 0.0
-        tnew_nonlin = 0.0
+
 
         do smooth =1, n_smooth
           ! tnew = tnew_nonlin ! for non-linearity
@@ -637,7 +637,6 @@ module transport_tri_semi
                   call solve_Gauss_Seidel
               end select
 
-              call get_local_residual
               call get_error
             end do ! end do totele_str
           end do ! end totele_unst
