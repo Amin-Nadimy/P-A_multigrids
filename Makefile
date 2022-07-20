@@ -5,7 +5,7 @@ CC=gfortran
 # -no-pie is also part of gprofiling means position independent and tells to compiler not to generate the pie version of the code
 # -fno-builtin is part of gprofiling whcih tells not to try optimise my code by replacing my functions with builtin functions or inline functions
 # -O is for debugging. higher number after O gives less debugging layers
-FLAGS= -g -O0 -Wno-implicit -pg -no-pie -fno-builtin -freal-8-real-16 #-Wall
+FLAGS= -g -O0 -Wno-implicit -pg -no-pie -fno-builtin -freal-8-real-16  -fbounds-check #-Wall
 #Sources
 SOURCES= ./precision.F90 ./Structures.F90 ./Generic.F90 ./strings.F90 ./evaluate.F90 ./Msh2Tri.F90 ./structured_meshgen.F90 ./ShapFun.F90 ./ShapFun_unstruc.F90 ./splitting.F90 ./matrices.F90  ./get_vtk_files.F90 ./transport_rect.F90 ./transport_tri.F90 ./transport_tri_unstr.F90 ./transport_tri_semi.F90 ./amin.F90 ./main.F90
 #Souces compiled

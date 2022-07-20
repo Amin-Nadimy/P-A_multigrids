@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 3
+      n_split = 2
       ! orientation = 1 ! 1 is up-triangle and -1 is down-triangle
       totele_str = 4**n_split
       solve_for = 'Tracer'
@@ -124,7 +124,7 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 100!time/dt
+      ntime = 1!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -139,7 +139,7 @@ module transport_tri_semi
       allocate(SN_orig(sngi,snloc),SNLX_orig(sngi,sndim,snloc), s_cont(sngi,ndim),s_cont_old(sngi,ndim) )
       allocate(ugi(ngi,ndim))
       allocate(xsgi(sngi,ndim), usgi(sngi,ndim), usgi2(sngi,ndim), income(sngi), snorm(sngi,ndim), norm(ndim))
-      allocate(tnew_nonlin(nloc,totele_str,totele_unst))
+      ! allocate(tnew_nonlin(nloc,totele_str,totele_unst))
       allocate(t_bc(2), u_bc(ndim,2**n_split*nloc,4)) ! it works just for semi_mesh.msh
       allocate(tnew_gi(ngi),tnew_xgi(ngi,ndim),tnew_sgi(sngi),tnew_sgi2(sngi),told_gi(ngi),told_sgi(sngi),told_sgi2(sngi))
       allocate(face_sn(sngi,nloc,nface), face_sn2(sngi,nloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
@@ -147,7 +147,7 @@ module transport_tri_semi
       allocate(x_loc(ndim,nloc))
       allocate(ml_ele(nloc))
       allocate(rhs_jac(nloc), mass_t_new(nloc), inv_jac(ngi, ndim, ndim ), tnew_loc2(nloc,totele_str,totele_unst,nface) )
-      allocate(tnew_nonlin_loc2(nloc,totele_str,totele_unst,nface))
+      ! allocate(tnew_nonlin_loc2(nloc,totele_str,totele_unst,nface))
       allocate(mat_tnew(nloc), mat_diag_approx(nloc), mass_told(nloc))
       allocate(L1(ngi), L2(ngi), L3(ngi), L4(ngi), x_all_str(ndim,nloc,totele_unst*totele_str))
       allocate(A_x(nloc),diff_vol(nloc),fin_ele(4))
@@ -161,6 +161,7 @@ module transport_tri_semi
 
       allocate(tracer(multi_levels), ele_info(multi_levels))
       do i=1,multi_levels
+        totele_str = 4**(n_split-i+1)
         allocate(tracer(i)%tnew(nloc,totele_str,totele_unst))
         allocate(tracer(i)%told(nloc,totele_str,totele_unst))
         allocate(tracer(i)%RHS(nloc,totele_str,totele_unst))
@@ -168,7 +169,7 @@ module transport_tri_semi
         allocate(tracer(i)%error(nloc,totele_str,totele_unst))
         allocate(tracer(i)%source(nloc,totele_str,totele_unst))
 
-        allocate(ele_info(i)%surf_ele(2**(n_split-1+1),nface))
+        allocate(ele_info(i)%surf_ele(2**(n_split-i+1),nface))
         call loc_surf_ele_multigrid(ele_info, i, n_split-i+1)
 
         allocate(ele_info(i)%str_neig(3,4**(n_split-i+1)))
@@ -298,12 +299,20 @@ module transport_tri_semi
         ! do its=1,nits
           do multigrid=1,n_multigrid
             do ilevel=1,multi_levels
-              totele_str = 4**(n_split-ilevel+1)
 
               call smoother
 
               call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                                t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig,ele_info(ilevel)%x_loc)
+                          t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig,ele_info(ilevel)%x_loc)
+
+              call restrictor(tracer,totele_unst, n_split, ilevel) ! it must be n_split NOT n_split-ilevel+1
+
+! if ( ilevel==2 ) then
+! print*, ilevel, totele_str
+! print*, 'average residuale',average(tracer(1)%residuale(:,3,un_ele))
+! print*, 'next', tracer(2)%source(1,1,1)
+!
+! end if
 
 
             end do ! ilevel multigrids
@@ -461,6 +470,12 @@ module transport_tri_semi
 
 
       subroutine smoother
+        if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+        if (allocated(tnew_nonlin_loc2)) deallocate(tnew_nonlin_loc2)
+
+        allocate(tnew_nonlin(nloc,4**(n_split-ilevel+1),totele_unst))
+        allocate(tnew_nonlin_loc2(nloc,4**(n_split-ilevel+1),totele_unst,nface))
+
         do smooth =1, n_smooth
           ! tnew = tnew_nonlin ! for non-linearity
           tracer(ilevel)%tnew = tnew_nonlin ! for non-linearity
@@ -476,6 +491,7 @@ module transport_tri_semi
             detwei => mesh_pnt%ptr%scaling_var(ilevel)%detwei
             nx = mesh_pnt%ptr%scaling_var(ilevel)%nx
             call get_un_ele_mass_stiff_diffvol(mass_stcl,stiff_stcl,diff_vol_stcl,n,nx,detwei,k,nloc,ngi,ndim,dt,ml_ele)
+            totele_str = 4**(n_split-ilevel+1)
             do str_ele=1,totele_str
               call semi_get_nx_pos(irow, ipos, orientation, n_split-ilevel+1, str_ele, nx, updown)
 
@@ -630,6 +646,7 @@ module transport_tri_semi
           detwei => mesh_pnt%ptr%scaling_var(ilevel)%detwei
           nx = mesh_pnt%ptr%scaling_var(ilevel)%nx
           call get_un_ele_mass_stiff_diffvol(mass_stcl,stiff_stcl,diff_vol_stcl,n,nx,detwei,k,nloc,ngi,ndim,dt,ml_ele)
+          totele_str = 4**(n_split-ilevel+1)
           do str_ele=1,totele_str
             call semi_get_nx_pos(irow, ipos, orientation, n_split, str_ele, nx, updown)
             ! get_splitting splits an unstructured ele n_split times

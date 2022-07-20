@@ -7,19 +7,28 @@ contains
 
 
   ! brief:: this subroutine restricts the fine mehs into a coarser one
-  subroutine restrictor(tracer, un_ele, coarse_ele, n_split, ilevel)
+  subroutine restrictor(tracer, totele_unst, n_split, ilevel)
     implicit none
     ! global vbl
-    integer, intent(in) ::  coarse_ele,n_split, un_ele,ilevel
+    integer, intent(in) ::  n_split, totele_unst,ilevel
     type(fields), dimension(:), INTENT(INOUT) :: tracer
     ! local vbl
-    integer :: fin_ele(4)
+    integer :: fin_ele(4),totele_str_dummy,coarse_ele, un_ele
 
-    call element_conversion(fin_ele,coarse_ele,n_split)
-    !################## now doing restriction #########################################
-    tracer(ilevel+1)%source(1,coarse_ele,un_ele) = average(tracer(ilevel)%residuale(:,fin_ele(3),un_ele))
-    tracer(ilevel+1)%source(2,coarse_ele,un_ele) = average(tracer(ilevel)%residuale(:,fin_ele(4),un_ele))
-    tracer(ilevel+1)%source(3,coarse_ele,un_ele) = average(tracer(ilevel)%residuale(:,fin_ele(1),un_ele))
+    if ( ilevel>1 ) then
+
+      totele_str_dummy = 4**(n_split-ilevel+1)
+      do un_ele=1,totele_unst
+        do coarse_ele = 1,totele_str_dummy
+          call element_conversion(fin_ele,coarse_ele,n_split-ilevel+1)
+          !################## now doing restriction #########################################
+! print*, ilevel,coarse_ele, fin_ele
+          tracer(ilevel)%source(1,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(3),un_ele))
+          tracer(ilevel)%source(2,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(4),un_ele))
+          tracer(ilevel)%source(3,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(1),un_ele))
+        end do
+      end do
+    end if
   end subroutine restrictor
 
 
@@ -1216,6 +1225,7 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
   do un_ele=1,totele_unst
     do i=1,2**n_split
       str_ele = surf_ele(i,1) ! for iface==1
+! print*, un_ele,n_split,  i, surf_ele(i,1)
       call get_str_info(n_split, str_ele, irow, ipos, orientation)
       Npos = meshList(un_ele)%Neig(1)
       call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
