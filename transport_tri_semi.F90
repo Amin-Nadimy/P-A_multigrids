@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 2
+      n_split = 3
       ! orientation = 1 ! 1 is up-triangle and -1 is down-triangle
       totele_str = 4**n_split
       solve_for = 'Tracer'
@@ -124,7 +124,7 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 1!time/dt
+      ntime = 10!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -307,11 +307,10 @@ module transport_tri_semi
 
               call restrictor(tracer,totele_unst, n_split, ilevel) ! it must be n_split NOT n_split-ilevel+1
 
-! if ( ilevel==2 ) then
-! print*, ilevel, totele_str
-! print*, 'average residuale',average(tracer(1)%residuale(:,3,un_ele))
-! print*, 'next', tracer(2)%source(1,1,1)
-!
+! if ( ilevel==2 .and. itime==5 ) then
+! print*, 'average residuale',tracer(1)%residuale(1,1,5),tracer(1)%residuale(2,1,5),tracer(1)%residuale(3,1,5)
+! print*, 'next', tracer(2)%RHS(3,1,5)
+! print*, ''
 ! end if
 
 
@@ -388,13 +387,16 @@ module transport_tri_semi
 
 
       subroutine get_RHS ! b
-       do iloc=1,nloc
-         tracer(ilevel)%source(iloc,str_ele,un_ele) = sum(mass_stcl(iloc,:)*tracer(ilevel)%source(:,str_ele,un_ele))
+        if ( ilevel==1 ) then
 
-         tracer(ilevel)%RHS(iloc,str_ele,un_ele)=theta*(mass_ele_old(iloc)+tracer(ilevel)%source(iloc,str_ele,un_ele))&
-         +(1.-theta)*(mass_ele_old(iloc) + stiff_ele_old(iloc)-flux_ele_old(iloc) &
-         - diff_vol(iloc) - diff_surf(iloc) + tracer(ilevel)%source(iloc,str_ele,un_ele) )
-       end do
+       do iloc=1,nloc
+           tracer(ilevel)%source(iloc,str_ele,un_ele) = sum(mass_stcl(iloc,:)*tracer(ilevel)%source(:,str_ele,un_ele))
+
+           tracer(ilevel)%RHS(iloc,str_ele,un_ele)=theta*(mass_ele_old(iloc)+tracer(ilevel)%source(iloc,str_ele,un_ele))&
+           +(1.-theta)*(mass_ele_old(iloc) + stiff_ele_old(iloc)-flux_ele_old(iloc) &
+           - diff_vol(iloc) - diff_surf(iloc) + tracer(ilevel)%source(iloc,str_ele,un_ele) )
+         end do
+       end if
        ! b(:,str_ele,un_ele) => tracer(ilevel)%RHS(iloc,str_ele,un_ele)
       end subroutine get_RHS
 
@@ -475,6 +477,8 @@ module transport_tri_semi
 
         allocate(tnew_nonlin(nloc,4**(n_split-ilevel+1),totele_unst))
         allocate(tnew_nonlin_loc2(nloc,4**(n_split-ilevel+1),totele_unst,nface))
+        tracer(ilevel)%tnew = 0.0
+        tnew_nonlin = 0.0
 
         do smooth =1, n_smooth
           ! tnew = tnew_nonlin ! for non-linearity
@@ -633,6 +637,7 @@ module transport_tri_semi
                   call solve_Gauss_Seidel
               end select
 
+              call get_local_residual
               call get_error
             end do ! end do totele_str
           end do ! end totele_unst

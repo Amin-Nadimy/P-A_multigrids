@@ -23,9 +23,9 @@ contains
           call element_conversion(fin_ele,coarse_ele,n_split-ilevel+1)
           !################## now doing restriction #########################################
 ! print*, ilevel,coarse_ele, fin_ele
-          tracer(ilevel)%source(1,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(3),un_ele))
-          tracer(ilevel)%source(2,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(4),un_ele))
-          tracer(ilevel)%source(3,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(1),un_ele))
+          tracer(ilevel)%RHS(1,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(3),un_ele))
+          tracer(ilevel)%RHS(2,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(4),un_ele))
+          tracer(ilevel)%RHS(3,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(1),un_ele))
         end do
       end do
     end if
