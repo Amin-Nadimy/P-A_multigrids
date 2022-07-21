@@ -252,11 +252,10 @@ module transport_tri_semi
       i=1 ! saving x_all structured triangles to be used for VTK generation
       do un_ele=1,totele_unst
         do str_ele=1,totele_str
-          call get_splitting(meshList(un_ele)%X, n_split, str_ele, str_x)
-          x_all_str(:,:,i) = str_x !(ndim,nloc,totele)
+          call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
+          x_all_str(:,:,i) = x_loc !(ndim,nloc,totele)
           i=i+1
 
-          call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
           do iloc=1,nloc
             analytical(iloc,str_ele,un_ele) =  boundary(x_loc(1,iloc),x_loc(2,iloc))
           end do
