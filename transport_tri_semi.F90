@@ -175,8 +175,6 @@ module transport_tri_semi
         allocate(ele_info(i)%str_neig(3,4**(n_split-i+1)))
         call get_str_neig_multigrid(ele_info, i, n_split-i+1)
 
-        allocate(ele_info(i)%x_loc(ndim,nloc))
-
       end do
 
       do un_ele=1,size(meshlist)
@@ -258,7 +256,6 @@ module transport_tri_semi
           x_all_str(:,:,i) = str_x !(ndim,nloc,totele)
           i=i+1
 
-          ! call get_splitting_multigrid(meshList(un_ele)%X, n_split, str_ele, ele_info(1)%x_loc)
           call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
           do iloc=1,nloc
             analytical(iloc,str_ele,un_ele) =  boundary(x_loc(1,iloc),x_loc(2,iloc))
@@ -308,7 +305,7 @@ module transport_tri_semi
               call smoother
 
               call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                          t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig,ele_info(ilevel)%x_loc)
+                          t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
 
               call restrictor(tracer,totele_unst, n_split, ilevel) ! it must be n_split NOT n_split-ilevel+1
 
@@ -490,7 +487,7 @@ module transport_tri_semi
           ! call update_overlaps3(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
 ! print*, tele_info(ilevel)%surf_ele
           call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                            t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig,ele_info(ilevel)%x_loc)
+                            t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
           do un_ele=1,totele_unst
             mesh_pnt%ptr => meshList(un_ele)
             detwei => mesh_pnt%ptr%scaling_var(ilevel)%detwei

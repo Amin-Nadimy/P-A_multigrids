@@ -173,7 +173,6 @@ module Structures
 
     type, public :: element_info
       integer, allocatable :: surf_ele(:,:), str_neig(:,:)
-      real, allocatable :: x_loc(:,:)
     end type element_info
 
 

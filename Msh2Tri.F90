@@ -108,51 +108,6 @@ contains
 
 
 
-  ! @brief> this subroutine recieves an unstructured mesh (meshlist) and splits each ele 'n' times
-  ! and returns a semi_structured mesh
-  ! str_ele:: structured element which we want to get its coordinates
-  ! str_x(ndim,nloc):: coordinates of corner nodes of structured ele
-  !n_split::  number of splitting
-  !un_ele:: coordinates of parent unstructured element
-  subroutine get_splitting_multigrid(un_x, n_split, str_ele, str_x)
-    ! External vbls
-    real(8), intent(in) :: un_x(2,3)
-    integer, intent(in):: n_split, str_ele
-
-    ! local vbl
-    real, intent(inout):: str_x(2,3)
-    real:: v1(2), v2(2)
-    integer:: irow, ipos, orientation
-
-    v1(1) = (un_x(1,1) - un_x(1,3))/(2**n_split)
-    v1(2) = (un_x(2,1) - un_x(2,3))/(2**n_split)
-    v2(1) = (un_x(1,2) - un_x(1,3))/(2**n_split)
-    v2(2) = (un_x(2,2) - un_x(2,3))/(2**n_split)
-
-    call get_str_info(n_split, str_ele, irow, ipos, orientation)
-
-
-    if ( mod(ipos,2)/=0 ) then
-      str_x(1,3) = un_x(1,3) + (irow-1) * v2(1) + (ipos/2) * v1(1)
-      str_x(2,3) = un_x(2,3) + (irow-1) * v2(2) + (ipos/2) * v1(2)
-
-      str_x(1,2) = un_x(1,3) + irow * v2(1) + (ipos/2) * v1(1)
-      str_x(2,2) = un_x(2,3) + irow * v2(2) + (ipos/2) * v1(2)
-
-      str_x(1,1) = un_x(1,3) + (irow-1) * v2(1) + v1(1) * (ipos/2+1)
-      str_x(2,1) = un_x(2,3) + (irow-1) * v2(2) + v1(2) * (ipos/2+1)
-
-    else
-      str_x(1,1) = un_x(1,3) + irow * v2(1) + v1(1) * (ipos/2-1)
-      str_x(2,1) = un_x(2,3) + irow * v2(2) + v1(2) * (ipos/2-1)
-
-      str_x(1,2) = un_x(1,3) + (irow-1) * v2(1) + v1(1) * (ipos/2)
-      str_x(2,2) = un_x(2,3) + (irow-1) * v2(2) + v1(2) * (ipos/2)
-
-      str_x(1,3) = un_x(1,3) + irow * v2(1) + v1(1) * (ipos/2)
-      str_x(2,3) = un_x(2,3) + irow * v2(2) + v1(2) * (ipos/2)
-    end if
-  end subroutine get_splitting_multigrid
 
 
   ! brief:: this subroutine gets displacement vector v1 and v2 based on un_ele

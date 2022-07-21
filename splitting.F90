@@ -1200,7 +1200,7 @@ end subroutine update_overlaps2
 
 
 
-subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig,x_loc)
+subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
   ! this subroutine updates overlaps of each unstructured ele
   ! local face numbers:
   !    |\
@@ -1221,9 +1221,10 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
   type(Mesh), dimension(:), INTENT(INOUT) :: meshList
   real, INTENT(IN) :: tnew(:,:,:), told(:,:,:)
   integer, intent(in) :: n_split, nface, totele_unst, nloc, str_neig(:,:), surf_ele(:,:)
-  real, intent(inout) ::  t_bc(:), x_loc(:,:)
+  real, intent(inout) ::  t_bc(:)
 
   ! local vbls
+  real :: x_loc(2,3)
   integer :: str_ele, j, Nnodes(2), Npos, Nside, ele22
   integer :: iface, ipos, irow, u_iface, un_ele, orientation,i
 
