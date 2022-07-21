@@ -258,7 +258,8 @@ module transport_tri_semi
           x_all_str(:,:,i) = str_x !(ndim,nloc,totele)
           i=i+1
 
-          call get_splitting_multigrid(meshList(un_ele)%X, n_split, str_ele, ele_info(1)%x_loc)
+          ! call get_splitting_multigrid(meshList(un_ele)%X, n_split, str_ele, ele_info(1)%x_loc)
+          call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
           do iloc=1,nloc
             analytical(iloc,str_ele,un_ele) =  boundary(x_loc(1,iloc),x_loc(2,iloc))
           end do
@@ -299,10 +300,10 @@ module transport_tri_semi
         ! do its=1,nits
           do multigrid=1,n_multigrid
             do ilevel=1,multi_levels
-              tracer(ilevel)%tnew = 0.0
-              tnew_nonlin = 0.0
               if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
               allocate(tnew_nonlin(nloc,4**(n_split-ilevel+1),totele_unst))
+              tracer(ilevel)%tnew = 0.0
+              tnew_nonlin = 0.0
 
               call smoother
 
