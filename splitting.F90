@@ -17,10 +17,10 @@ contains
 
     if ( ilevel>1 ) then
 
-      totele_str_dummy = 4**(n_split-ilevel+1)
+      totele_str_dummy = 4**(n_split)
       do un_ele=1,totele_unst
         do coarse_ele = 1,totele_str_dummy
-          call element_conversion(fin_ele,coarse_ele,n_split-ilevel+1)
+          call element_conversion(fin_ele,coarse_ele,n_split)
           !################## now doing restriction #########################################
 ! print*, ilevel,coarse_ele, fin_ele
           tracer(ilevel)%RHS(1,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(3),un_ele))

@@ -31,7 +31,7 @@ module transport_tri_semi
       character (len=20):: file_name, solve_for
       logical :: with_time_slab, D3
 
-      integer :: gi, iface, ele, ele2, n_split, irow, ipos, sum_up, irow_ups
+      integer :: gi, iface, ele, ele2, n_split, irow, ipos, sum_up, irow_ups, i_split
       integer :: totele_unst, un_ele, str_ele, totele_str,updown
       integer :: s_list_no, s_gi, iloc, jloc, i,j, ntime, vtk_io,smooth
       integer :: itime, idim, sndim, nonodes, mloc, col, row, row2
@@ -296,17 +296,18 @@ module transport_tri_semi
         ! do its=1,nits
           do multigrid=1,n_multigrid
             do ilevel=1,multi_levels
+              i_split = n_split-ilevel+1
               if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
-              allocate(tnew_nonlin(nloc,4**(n_split-ilevel+1),totele_unst))
+              allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
               tracer(ilevel)%tnew = 0.0
               tnew_nonlin = 0.0
 
               call smoother
 
               call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                          t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
+                          t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
 
-              call restrictor(tracer,totele_unst, n_split, ilevel) ! it must be n_split NOT n_split-ilevel+1
+              call restrictor(tracer,totele_unst, i_split, ilevel) 
 
               call get_residual
 
@@ -474,7 +475,7 @@ module transport_tri_semi
 
       subroutine smoother
         if (allocated(tnew_nonlin_loc2)) deallocate(tnew_nonlin_loc2)
-        allocate(tnew_nonlin_loc2(nloc,4**(n_split-ilevel+1),totele_unst,nface))
+        allocate(tnew_nonlin_loc2(nloc,4**(i_split),totele_unst,nface))
 
 
         do smooth =1, n_smooth
@@ -484,20 +485,20 @@ module transport_tri_semi
           ! call update_overlaps3(meshlist, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
           ! call update_overlaps2(meshlist, surf_ele2, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
           ! call update_overlaps3(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
-! print*, tele_info(ilevel)%surf_ele
           call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                            t_bc, n_split-ilevel+1, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
+                            t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
+
           do un_ele=1,totele_unst
             mesh_pnt%ptr => meshList(un_ele)
             detwei => mesh_pnt%ptr%scaling_var(ilevel)%detwei
             nx = mesh_pnt%ptr%scaling_var(ilevel)%nx
             call get_un_ele_mass_stiff_diffvol(mass_stcl,stiff_stcl,diff_vol_stcl,n,nx,detwei,k,nloc,ngi,ndim,dt,ml_ele)
-            totele_str = 4**(n_split-ilevel+1)
+            totele_str = 4**(i_split)
             do str_ele=1,totele_str
-              call semi_get_nx_pos(irow, ipos, orientation, n_split-ilevel+1, str_ele, nx, updown)
+              call semi_get_nx_pos(irow, ipos, orientation, i_split, str_ele, nx, updown)
 
               ! get_splitting splits an unstructured ele n_split times
-              call get_splitting(mesh_pnt%ptr%X, n_split, str_ele, x_loc)
+              call get_splitting(mesh_pnt%ptr%X, i_split, str_ele, x_loc)
 
               ! #################################################################
               u_loc => mesh_pnt%ptr%u_ele(:,:,str_ele)
@@ -611,7 +612,7 @@ module transport_tri_semi
                 end do
 
                 !################################# end get flux ##########################################
-                call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, n_split, n, ngi, sngi, ele22,sn2,&
+                call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, i_split, n, ngi, sngi, ele22,sn2,&
                                       nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
                 call get_diff_surf_stencl
               end do ! iface
@@ -649,9 +650,10 @@ module transport_tri_semi
           call get_un_ele_mass_stiff_diffvol(mass_stcl,stiff_stcl,diff_vol_stcl,n,nx,detwei,k,nloc,ngi,ndim,dt,ml_ele)
           totele_str = 4**(n_split-ilevel+1)
           do str_ele=1,totele_str
-            call semi_get_nx_pos(irow, ipos, orientation, n_split, str_ele, nx, updown)
+            call semi_get_nx_pos(irow, ipos, orientation, i_split, str_ele, nx, updown)
+
             ! get_splitting splits an unstructured ele n_split times
-            call get_splitting(mesh_pnt%ptr%X, n_split, str_ele, x_loc)
+            call get_splitting(mesh_pnt%ptr%X, i_split, str_ele, x_loc)
 
             ! #################################################################
             u_loc => mesh_pnt%ptr%u_ele(:,:,str_ele)
@@ -765,7 +767,7 @@ module transport_tri_semi
               end do
 
               !################################# end get flux ##########################################
-              call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, n_split, n, ngi, sngi, ele22,sn2,&
+              call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, i_split, n, ngi, sngi, ele22,sn2,&
                                     nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
               call get_diff_surf_stencl
             end do ! iface
