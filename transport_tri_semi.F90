@@ -307,7 +307,7 @@ module transport_tri_semi
               call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
                           t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
 
-              call restrictor(tracer,totele_unst, i_split, ilevel) 
+              call restrictor(tracer,totele_unst, i_split, ilevel)
 
               call get_residual
 
@@ -315,6 +315,9 @@ module transport_tri_semi
 
 
             do ilevel = multi_levels-1,1,-1
+              i_split = n_split-ilevel+1
+              
+call prolongator(tracer, totele_unst, i_split, ilevel)
 
             end do !ilevel
           end do ! solve_its

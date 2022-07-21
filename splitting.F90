@@ -7,22 +7,22 @@ contains
 
 
   ! brief:: this subroutine restricts the fine mehs into a coarser one
-  subroutine restrictor(tracer, totele_unst, n_split, ilevel)
+  subroutine restrictor(tracer, totele_unst, i_split, ilevel)
     implicit none
     ! global vbl
-    integer, intent(in) ::  n_split, totele_unst,ilevel
+    integer, intent(in) ::  i_split, totele_unst,ilevel
     type(fields), dimension(:), INTENT(INOUT) :: tracer
     ! local vbl
     integer :: fin_ele(4),totele_str_dummy,coarse_ele, un_ele
 
     if ( ilevel>1 ) then
 
-      totele_str_dummy = 4**(n_split)
+      totele_str_dummy = 4**(i_split)
       do un_ele=1,totele_unst
         do coarse_ele = 1,totele_str_dummy
-          call element_conversion(fin_ele,coarse_ele,n_split)
+          call element_conversion(fin_ele,coarse_ele,i_split)
           !################## now doing restriction #########################################
-! print*, ilevel,coarse_ele, fin_ele
+
           tracer(ilevel)%RHS(1,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(3),un_ele))
           tracer(ilevel)%RHS(2,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(4),un_ele))
           tracer(ilevel)%RHS(3,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(1),un_ele))
@@ -33,18 +33,18 @@ contains
 
 
 
-  subroutine prolongator(tracer, totele_unst, n_split, ilevel)
+  subroutine prolongator(tracer, totele_unst, i_split, ilevel)
     implicit none
     ! global vbl
-    integer, intent(in) ::  n_split,ilevel,totele_unst
+    integer, intent(in) ::  i_split,ilevel,totele_unst
     type(fields), dimension(:), INTENT(INOUT) :: tracer
     ! local vbl
     integer :: fin_ele(4), un_ele, totele_str,coarse_ele
 
-    totele_str = 4**(n_split-ilevel+1)
+    totele_str = 4**(i_split)
     do un_ele = 1,totele_unst
       do coarse_ele = 1, totele_str
-        call element_conversion(fin_ele,coarse_ele,n_split)
+        call element_conversion(fin_ele,coarse_ele,i_split+1)
         !################## now doing restriction #########################################
         ! should be == tnew(iloc) + 0.5*error() + 0.5*error()
         ! basically, here error is coming from solved coarser grid
@@ -87,17 +87,17 @@ contains
 
   !brief:: this subroutine returns local number of fine eles at fines multigrid level corresponding to the coarser coarse_ele
   ! n_split:: refers to no spliting of the coarser grid NOT the finer one
-  subroutine element_conversion(fin_ele,coarse_ele,n_split)
+  subroutine element_conversion(fin_ele,coarse_ele,i_split)
     implicit none
     ! global vbl
-    integer, intent(in) ::  coarse_ele,n_split
+    integer, intent(in) ::  coarse_ele,i_split
     ! local vbl
     integer :: counter,orientation,ipos, irow, rowx,tot_fine
     integer, intent(out) :: fin_ele(4)
 
-    call get_str_info(n_split, coarse_ele, irow, ipos, orientation)
+    call get_str_info(i_split, coarse_ele, irow, ipos, orientation)
     tot_fine = 0
-    rowx = 2**(n_split+1)*2-1
+    rowx = 2**(i_split+1)*2-1
 
     select case(orientation)
     case(1) ! uptriangle    4
@@ -1200,7 +1200,7 @@ end subroutine update_overlaps2
 
 
 
-subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
+subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, i_split, nface, totele_unst, nloc, str_neig)
   ! this subroutine updates overlaps of each unstructured ele
   ! local face numbers:
   !    |\
@@ -1220,7 +1220,7 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
   ! eternal vbls
   type(Mesh), dimension(:), INTENT(INOUT) :: meshList
   real, INTENT(IN) :: tnew(:,:,:), told(:,:,:)
-  integer, intent(in) :: n_split, nface, totele_unst, nloc, str_neig(:,:), surf_ele(:,:)
+  integer, intent(in) :: i_split, nface, totele_unst, nloc, str_neig(:,:), surf_ele(:,:)
   real, intent(inout) ::  t_bc(:)
 
   ! local vbls
@@ -1229,12 +1229,12 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
   integer :: iface, ipos, irow, u_iface, un_ele, orientation,i
 
   do un_ele=1,totele_unst
-    do i=1,2**n_split
+    do i=1,2**i_split
       str_ele = surf_ele(i,1) ! for iface==1
-! print*, un_ele,n_split,  i, surf_ele(i,1)
-      call get_str_info(n_split, str_ele, irow, ipos, orientation)
+! print*, un_ele,i_split,  i, surf_ele(i,1)
+      call get_str_info(i_split, str_ele, irow, ipos, orientation)
       Npos = meshList(un_ele)%Neig(1)
-      call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
+      call get_splitting(meshList(un_ele)%X, i_split, str_ele, x_loc)
       if ( Npos==0 ) then
       t_bc(1) = boundary(x_loc(1,1) , x_loc(2,1))
       t_bc(2) = boundary(x_loc(1,3) , x_loc(2,3))
@@ -1248,9 +1248,9 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
         Nside = meshList(un_ele)%fNeig(1)
         if ( Nside==2 ) then
           if ( meshList(un_ele)%Dir(1) ) then
-            meshList(Npos)%t_overlap((2**n_split-(ipos/2+1) +1)*nloc-2:(2**n_split-(ipos/2+1) +1)*nloc,Nside)&
+            meshList(Npos)%t_overlap((2**i_split-(ipos/2+1) +1)*nloc-2:(2**i_split-(ipos/2+1) +1)*nloc,Nside)&
             = tnew(:,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-(ipos/2+1) +1)*nloc-2:(2**n_split-(ipos/2+1) +1)*nloc,Nside)&
+            meshList(Npos)%t_overlap_old((2**i_split-(ipos/2+1) +1)*nloc-2:(2**i_split-(ipos/2+1) +1)*nloc,Nside)&
             = told(:,str_ele, un_ele)
           else
             meshList(Npos)%t_overlap((ipos/2+1)*nloc-2:(ipos/2+1)*nloc,Nside)= tnew(:,str_ele, un_ele)
@@ -1261,9 +1261,9 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
             meshList(Npos)%t_overlap((ipos/2+1)*nloc-2:(ipos/2+1)*nloc,Nside) = tnew(:,str_ele, un_ele)
             meshList(Npos)%t_overlap_old((ipos/2+1)*nloc-2:(ipos/2+1)*nloc,Nside) = told(:,str_ele, un_ele)
           else
-            meshList(Npos)%t_overlap((2**n_split-(ipos/2+1) +1)*nloc-2:(2**n_split-(ipos/2+1) +1)*nloc,Nside)&
+            meshList(Npos)%t_overlap((2**i_split-(ipos/2+1) +1)*nloc-2:(2**i_split-(ipos/2+1) +1)*nloc,Nside)&
             = tnew(:,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-(ipos/2+1) +1)*nloc-2:(2**n_split-(ipos/2+1) +1)*nloc,Nside)&
+            meshList(Npos)%t_overlap_old((2**i_split-(ipos/2+1) +1)*nloc-2:(2**i_split-(ipos/2+1) +1)*nloc,Nside)&
             = told(:,str_ele, un_ele)
           end if
         end if
@@ -1271,11 +1271,11 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
     end do ! str_ele fir face 1
 
 
-    do i=1,2**n_split ! iface==3
+    do i=1,2**i_split ! iface==3
       str_ele = surf_ele(i,3)
-      call get_str_info(n_split, str_ele, irow, ipos, orientation)
+      call get_str_info(i_split, str_ele, irow, ipos, orientation)
       Npos = meshList(un_ele)%Neig(3)
-      call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
+      call get_splitting(meshList(un_ele)%X, i_split, str_ele, x_loc)
       if ( Npos==0 ) then
             t_bc(1) = boundary(x_loc(1,2) , x_loc(2,2))
             t_bc(2) = boundary(x_loc(1,3) , x_loc(2,3))
@@ -1289,13 +1289,13 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
         Nside = meshList(un_ele)%fNeig(3)
         if ( Nside==2 ) then
           if ( meshList(un_ele)%Dir(3) ) then
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-2,Nside) = tnew(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-1,Nside) = tnew(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc  ,Nside) = tnew(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-2,Nside) = tnew(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-1,Nside) = tnew(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc  ,Nside) = tnew(3,str_ele, un_ele)
 
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-2,Nside) = told(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-1,Nside) = told(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc  ,Nside) = told(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-2,Nside) = told(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-1,Nside) = told(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc  ,Nside) = told(3,str_ele, un_ele)
           else
             meshList(Npos)%t_overlap(irow*nloc-2,Nside) = tnew(1,str_ele, un_ele)
             meshList(Npos)%t_overlap(irow*nloc-1,Nside) = tnew(2,str_ele, un_ele)
@@ -1315,24 +1315,24 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
             meshList(Npos)%t_overlap_old(irow*nloc-1,Nside)= told(2,str_ele, un_ele)
             meshList(Npos)%t_overlap_old(irow*nloc  ,Nside)= told(3,str_ele, un_ele)
           else
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-2,Nside)= tnew(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-1,Nside)= tnew(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc  ,Nside)= tnew(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-2,Nside)= tnew(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-1,Nside)= tnew(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc  ,Nside)= tnew(3,str_ele, un_ele)
 
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-2,Nside)= told(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-1,Nside)= told(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc  ,Nside)= told(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-2,Nside)= told(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-1,Nside)= told(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc  ,Nside)= told(3,str_ele, un_ele)
           end if
         end if
       end if
     end do
 
 
-    do i=1,2**n_split
+    do i=1,2**i_split
       str_ele = surf_ele(i,2)
-      call get_str_info(n_split, str_ele, irow, ipos, orientation)
+      call get_str_info(i_split, str_ele, irow, ipos, orientation)
       npos = meshList(un_ele)%Neig(2)
-      call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
+      call get_splitting(meshList(un_ele)%X, i_split, str_ele, x_loc)
       if ( Npos==0 ) then
         t_bc(1) = boundary(x_loc(1,1) , x_loc(2,1))
         t_bc(2) = boundary(x_loc(1,2) , x_loc(2,2))
@@ -1354,24 +1354,24 @@ subroutine update_overlaps(meshlist,surf_ele, tnew, told, t_bc, n_split, nface, 
             meshList(Npos)%t_overlap_old((irow-1)*nloc+2,Nside)= told(2,str_ele, un_ele)
             meshList(Npos)%t_overlap_old((irow-1)*nloc+3,Nside)= told(3,str_ele, un_ele)
           else
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-2,Nside)= tnew(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-1,Nside)= tnew(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc  ,Nside)= tnew(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-2,Nside)= tnew(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-1,Nside)= tnew(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc  ,Nside)= tnew(3,str_ele, un_ele)
 
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-2,Nside)= told(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-1,Nside)= told(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc  ,Nside)= told(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-2,Nside)= told(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-1,Nside)= told(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc  ,Nside)= told(3,str_ele, un_ele)
           end if
 
         else
           if ( meshList(un_ele)%Dir(2) ) then
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-2,Nside)= tnew(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc-1,Nside)= tnew(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap((2**n_split-irow +1)*nloc  ,Nside)= tnew(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-2,Nside)= tnew(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc-1,Nside)= tnew(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap((2**i_split-irow +1)*nloc  ,Nside)= tnew(3,str_ele, un_ele)
 
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-2,Nside)= told(1,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc-1,Nside)= told(2,str_ele, un_ele)
-            meshList(Npos)%t_overlap_old((2**n_split-irow +1)*nloc  ,Nside)= told(3,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-2,Nside)= told(1,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc-1,Nside)= told(2,str_ele, un_ele)
+            meshList(Npos)%t_overlap_old((2**i_split-irow +1)*nloc  ,Nside)= told(3,str_ele, un_ele)
           else
             meshList(Npos)%t_overlap(irow*nloc-2,Nside)= tnew(1,str_ele, un_ele)
             meshList(Npos)%t_overlap(irow*nloc-1,Nside)= tnew(2,str_ele, un_ele)
