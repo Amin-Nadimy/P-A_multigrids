@@ -7,12 +7,12 @@ contains
   !@Brief> This subroutine generates VTU files based on XML format for unstructured grids.
   ! an example is used from https://people.math.sc.edu/Burkardt/data/vtu/vtu.html
   ! overall format comes from http://www.princeton.edu/~efeibush/viscourse/vtk.pdf
-  subroutine get_vtu(x_all, tnew, error,analytical, str_ele, un_ele, totele, nloc, itime, ndim, cell_type, solve_for)
+  subroutine get_vtu(x_all, tnew, error,analytical, totele_str, totele_unst, totele, nloc, itime, ndim, cell_type, solve_for)
     implicit none
     ! Global variables
-    integer, intent(in):: itime, nloc, totele, ndim, cell_type, str_ele, un_ele
-    real, intent(in):: tnew(nloc,str_ele, un_ele), x_all(ndim,nloc,totele),error(nloc,str_ele, un_ele)
-    real,intent(in) :: analytical(nloc,str_ele, un_ele)
+    integer, intent(in):: itime, nloc, totele, ndim, cell_type, totele_str, totele_unst
+    real, intent(in):: tnew(nloc,totele_str, totele_unst), x_all(ndim,nloc,totele),error(nloc,totele_str, totele_unst)
+    real,intent(in) :: analytical(nloc,totele_str, totele_unst)
     character (len=20), intent(in):: solve_for
 
     !local variables
@@ -45,8 +45,8 @@ contains
       write(1,'((8X,a,X,a,X,a,a,a,X,a))', advance="yes" ) '<DataArray', 'type="Float32"', &
       'Name="', trim(solve_for),'"', 'Format="ascii">'
 
-      do u_ele=1,un_ele
-        do s_ele =1,str_ele
+      do u_ele=1,totele_unst
+        do s_ele =1,totele_str
         write(1,'(10x,F12.10,2x)',advance="yes") tnew(1,s_ele, u_ele)
         write(1,'(10x,F12.10,2x)',advance="yes") tnew(2,s_ele, u_ele)
         write(1,'(10x,F12.10,2x)',advance="yes") tnew(3,s_ele, u_ele)
@@ -59,8 +59,8 @@ contains
       write(1,'((8X,a,X,a,X,a,a,a,X,a))', advance="yes" ) '<DataArray', 'type="Float32"', &
       'Name="', 'error','"', 'Format="ascii">'
 
-      do u_ele=1,un_ele
-        do s_ele =1,str_ele
+      do u_ele=1,totele_unst
+        do s_ele =1,totele_str
         write(1,'(10x,F10.7,2x)',advance="yes") error(1,s_ele, u_ele)
         write(1,'(10x,F10.7,2x)',advance="yes") error(2,s_ele, u_ele)
         write(1,'(10x,F10.7,2x)',advance="yes") error(3,s_ele, u_ele)
@@ -73,8 +73,8 @@ contains
       write(1,'((8X,a,X,a,X,a,a,a,X,a))', advance="yes" ) '<DataArray', 'type="Float32"', &
       'Name="', 'analytical','"', 'Format="ascii">'
 
-      do u_ele=1,un_ele
-        do s_ele =1,str_ele
+      do u_ele=1,totele_unst
+        do s_ele =1,totele_str
         write(1,'(10x,F10.7,2x)',advance="yes") analytical(1,s_ele, u_ele)
         write(1,'(10x,F10.7,2x)',advance="yes") analytical(2,s_ele, u_ele)
         write(1,'(10x,F10.7,2x)',advance="yes") analytical(3,s_ele, u_ele)

@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 3
+      n_split = 2
       ! orientation = 1 ! 1 is up-triangle and -1 is down-triangle
       totele_str = 4**n_split
       solve_for = 'Tracer'
@@ -283,7 +283,7 @@ module transport_tri_semi
           totele_str = 4**(n_split)
           ! call get_vtu(x_all_str, tnew, totele_str*totele_unst, nloc, itime, ndim, cell_type, solve_for)
           call get_vtu(x_all_str, tracer(1)%tnew,tracer(1)%error, &
-                                                analytical,str_ele, un_ele, totele_str*totele_unst,&
+                                                analytical,totele_str, totele_unst, totele_str*totele_unst,&
                                                 nloc, itime, ndim, cell_type, solve_for)
 
 
@@ -293,34 +293,39 @@ module transport_tri_semi
 
         tracer(1)%told = tracer(1)%tnew
         tnew_nonlin = tracer(1)%tnew
-        ! do its=1,nits
-          do multigrid=1,n_multigrid
-            do ilevel=1,multi_levels
-              i_split = n_split-ilevel+1
-              if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
-              allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
-              tracer(ilevel)%tnew = 0.0
-              tnew_nonlin = 0.0
+        do multigrid=1,n_multigrid
 
-              call smoother
+            ! ################### restriction ###############################
+          do ilevel=1,multi_levels
+            i_split = n_split-ilevel+1
+            if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+            allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+            tracer(ilevel)%tnew = 0.0
+            tnew_nonlin = 0.0
 
-              call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                          t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
+            call smoother
 
-              call restrictor(tracer,totele_unst, i_split, ilevel)
+            call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
+                        t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
 
-              call get_residual
+            call restrictor(tracer,totele_unst, i_split, ilevel)
 
-            end do ! ilevel multigrids
+            call get_residual
 
+          end do ! ilevel multigrids
 
-            do ilevel = multi_levels-1,1,-1
-              i_split = n_split-ilevel+1
-              
-call prolongator(tracer, totele_unst, i_split, ilevel)
+          ! ######################### Prolongation ##########################
+          do ilevel = multi_levels-1,1,-1
+            i_split = n_split-ilevel+1
+            if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+            allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
 
-            end do !ilevel
-          end do ! solve_its
+            call prolongator(tracer, totele_unst, i_split, ilevel)
+
+            call smoother
+
+          end do !ilevel
+        end do ! n_multigrid
         print*, 'semi', itime
       end do ! do itime=1,ntime
 
