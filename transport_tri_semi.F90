@@ -111,7 +111,13 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 3
+      n_split = 2
+
+      if ( multi_levels > n_split ) then
+        print*, 'error:: The number of multi_levels is higher than n_split'
+        stop
+      end if
+
       ! orientation = 1 ! 1 is up-triangle and -1 is down-triangle
       totele_str = 4**n_split
       solve_for = 'Tracer'
@@ -274,6 +280,7 @@ module transport_tri_semi
       print*, '|   n_split =', n_split
       print*, '|   totele un_ele & totele',  totele_unst, totele_str * totele_unst
       print*, '|   ntime = ', ntime
+      print*, '|   dt    = ', dt
       print*, '---------------------------------------------------------'
       call CPU_TIME(t1)
 
@@ -326,18 +333,20 @@ module transport_tri_semi
           tracer(ilevel)%tnew = 0.0
           tnew_nonlin = 0.0
 
-          do i=1,10
+          do i=1,50
             call smoother
           end do
 
 
           ! ######################### Prolongation ##########################
-          do ilevel = multi_levels-1,1,-1
+          do ilevel = multi_levels,2,-1
+            i_split = n_split-ilevel+2
+
+            call prolongator(tracer, totele_unst, i_split, ilevel)
+
             i_split = n_split-ilevel+1
             if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
             allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
-
-            call prolongator(tracer, totele_unst, i_split, ilevel)
 
             call smoother
 
@@ -648,14 +657,22 @@ module transport_tri_semi
               select case(solver)
                 case(1)
                   call get_A_x(.false.)
-                  call get_RHS
+
+                  if ( ilevel /= 0 ) then
+                    call get_RHS
+                  end if
+
                   call get_diagonal
                   call solve_Jacobi
                 case(2)
                   call solve_Richardson
                 case(3)
                   call get_A_x(.true.)
-                  call get_RHS
+
+                  if ( ilevel /= 0 ) then
+                    call get_RHS
+                  end if
+
                   call get_diagonal
                   call solve_Gauss_Seidel
               end select
@@ -800,7 +817,11 @@ module transport_tri_semi
             !################################# solve the system ########################################
             tnew_nonlin_loc => tnew_nonlin(:,str_ele, un_ele)
             call get_A_x(.false.)
-            call get_RHS
+
+            if ( ilevel /= 0 ) then
+              call get_RHS
+            end if
+
             tracer(ilevel)%residuale(:,str_ele, un_ele) = A_x(:) -  tracer(ilevel)%RHS(:,str_ele,un_ele)
           end do
         end do
