@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 2
+      n_split = 3
       ! orientation = 1 ! 1 is up-triangle and -1 is down-triangle
       totele_str = 4**n_split
       solve_for = 'Tracer'
@@ -248,7 +248,7 @@ module transport_tri_semi
                 nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn_str, face_sn2_str, face_snlx_str, &
                 sweight_str, npoly, ele_type, totele_str)!, face_list_no)
 
-
+      totele_str = 4**(n_split)
       i=1 ! saving x_all structured triangles to be used for VTK generation
       do un_ele=1,totele_unst
         do str_ele=1,totele_str
@@ -277,9 +277,11 @@ module transport_tri_semi
       print*, '---------------------------------------------------------'
       call CPU_TIME(t1)
 
+
       do itime=1,ntime
         ! generating VTK files
         if ( vtk_io <= itime ) then
+
           totele_str = 4**(n_split)
           ! call get_vtu(x_all_str, tnew, totele_str*totele_unst, nloc, itime, ndim, cell_type, solve_for)
           call get_vtu(x_all_str, tracer(1)%tnew,tracer(1)%error, &
@@ -294,6 +296,7 @@ module transport_tri_semi
         tracer(1)%told = tracer(1)%tnew
         tnew_nonlin = tracer(1)%tnew
         do multigrid=1,n_multigrid
+
 
             ! ################### restriction ###############################
           do ilevel=1,multi_levels
@@ -313,6 +316,20 @@ module transport_tri_semi
             call get_residual
 
           end do ! ilevel multigrids
+
+
+          ! ################### solve the coarsest level ####################
+          ilevel = multi_levels
+          i_split = n_split-ilevel+1
+          if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+          allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+          tracer(ilevel)%tnew = 0.0
+          tnew_nonlin = 0.0
+
+          do i=1,10
+            call smoother
+          end do
+
 
           ! ######################### Prolongation ##########################
           do ilevel = multi_levels-1,1,-1
