@@ -130,7 +130,7 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 10!time/dt
+      ntime = 200!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -342,7 +342,7 @@ module transport_tri_semi
           do ilevel = multi_levels-1,1,-1
             i_split = n_split-ilevel+1
 
-            ! call prolongator(tracer, totele_unst, i_split, ilevel)
+            call prolongator(tracer, totele_unst, i_split, ilevel)
 
             if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
             allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
@@ -351,7 +351,6 @@ module transport_tri_semi
             !
             call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
                         t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
-
 
             call smoother
 
