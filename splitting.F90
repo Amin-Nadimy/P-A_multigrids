@@ -7,25 +7,25 @@ contains
 
 
   ! brief:: this subroutine restricts the fine mehs into a coarser one
-  subroutine restrictor(tracer, totele_unst, i_split, ilevel)
+  subroutine restrictor(tracer, totele_unst, i_split, multi_levels,ilevel)
     implicit none
     ! global vbl
-    integer, intent(in) ::  i_split, totele_unst,ilevel
+    integer, intent(in) ::  i_split, totele_unst,ilevel, multi_levels
     type(fields), dimension(:), INTENT(INOUT) :: tracer
     ! local vbl
     integer :: fin_ele(4),totele_str_dummy,coarse_ele, un_ele
 
-    if ( ilevel>1 ) then
+    if ( ilevel<multi_levels ) then
 
-      totele_str_dummy = 4**(i_split)
+      totele_str_dummy = 4**(i_split-1)
       do un_ele=1,totele_unst
         do coarse_ele = 1,totele_str_dummy
-          call element_conversion(fin_ele,coarse_ele,i_split)
+          call element_conversion(fin_ele,coarse_ele,i_split-1)
           !################## now doing restriction #########################################
 
-          tracer(ilevel)%RHS(1,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(3),un_ele))
-          tracer(ilevel)%RHS(2,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(4),un_ele))
-          tracer(ilevel)%RHS(3,coarse_ele,un_ele) = average(tracer(ilevel-1)%residuale(:,fin_ele(1),un_ele))
+          tracer(ilevel+1)%RHS(1,coarse_ele,un_ele) = average(tracer(ilevel)%residuale(:,fin_ele(3),un_ele))
+          tracer(ilevel+1)%RHS(2,coarse_ele,un_ele) = average(tracer(ilevel)%residuale(:,fin_ele(4),un_ele))
+          tracer(ilevel+1)%RHS(3,coarse_ele,un_ele) = average(tracer(ilevel)%residuale(:,fin_ele(1),un_ele))
         end do
       end do
     end if
@@ -44,44 +44,48 @@ contains
     integer :: fin_ele(4), un_ele, totele_str,coarse_ele,total_coarse
 
     total_coarse = 4**(i_split-1) ! it gives total str_ele for the coarser grid
-
+! print*, 'total coarse ele is', total_coarse
     do un_ele = 1,totele_unst
+! print*, un_ele
       do coarse_ele = 1, total_coarse
         call element_conversion(fin_ele,coarse_ele,i_split-1)
+! print*, ilevel, i_split, coarse_ele
+! print*, fin_ele
+! print*, ''
         !################## now doing restriction #########################################
         ! should be == tnew(iloc) + 0.5*error() + 0.5*error()
         ! basically, here error is coming from solved coarser grid
         !####################### for fin_ele(1) ##################################
         tracer(ilevel)%tnew(1,fin_ele(1),un_ele) = tracer(ilevel)%tnew(1,fin_ele(1),un_ele) &
-                                                       + 0.5* tracer(ilevel+1)%error(3,coarse_ele,un_ele)&
-                                                       + 0.5* tracer(ilevel+1)%error(1,coarse_ele,un_ele)
+                                                       + 0.5* tracer(ilevel+1)%tnew(3,coarse_ele,un_ele)&
+                                                       + 0.5* tracer(ilevel+1)%tnew(1,coarse_ele,un_ele)
         tracer(ilevel)%tnew(2,fin_ele(1),un_ele) = tracer(ilevel)%tnew(2,fin_ele(1),un_ele) &
-                                                       + 0.5* tracer(ilevel+1)%error(2,coarse_ele,un_ele)&
-                                                       + 0.5* tracer(ilevel+1)%error(3,coarse_ele,un_ele)
+                                                       + 0.5* tracer(ilevel+1)%tnew(2,coarse_ele,un_ele)&
+                                                       + 0.5* tracer(ilevel+1)%tnew(3,coarse_ele,un_ele)
         tracer(ilevel)%tnew(3,fin_ele(1),un_ele) = tracer(ilevel)%tnew(3,fin_ele(1),un_ele) &
-                                                       + tracer(ilevel+1)%error(3,coarse_ele,un_ele)
+                                                       + tracer(ilevel+1)%tnew(3,coarse_ele,un_ele)
         !####################### for fin_ele(2) ##################################
         tracer(ilevel)%tnew(1,fin_ele(2),un_ele) = tracer(ilevel)%tnew(1,fin_ele(2),un_ele) &
-                                                       + tracer(ilevel)%error(2,fin_ele(1),un_ele)
+                                                       + tracer(ilevel)%tnew(2,fin_ele(1),un_ele)
         tracer(ilevel)%tnew(2,fin_ele(2),un_ele) = tracer(ilevel)%tnew(2,fin_ele(2),un_ele) &
-                                                       + tracer(ilevel)%error(1,fin_ele(1),un_ele)
+                                                       + tracer(ilevel)%tnew(1,fin_ele(1),un_ele)
         tracer(ilevel)%tnew(3,fin_ele(2),un_ele) = tracer(ilevel)%tnew(3,fin_ele(2),un_ele) &
-                                                       + 0.5* tracer(ilevel+1)%error(1,coarse_ele,un_ele)&
-                                                       + 0.5* tracer(ilevel+1)%error(2,coarse_ele,un_ele)
+                                                       + 0.5* tracer(ilevel+1)%tnew(1,coarse_ele,un_ele)&
+                                                       + 0.5* tracer(ilevel+1)%tnew(2,coarse_ele,un_ele)
         !####################### for fin_ele(3) ##################################
         tracer(ilevel)%tnew(1,fin_ele(3),un_ele) = tracer(ilevel)%tnew(1,fin_ele(3),un_ele) &
-                                                       + tracer(ilevel+1)%error(1,coarse_ele,un_ele)
+                                                       + tracer(ilevel+1)%tnew(1,coarse_ele,un_ele)
         tracer(ilevel)%tnew(2,fin_ele(3),un_ele) = tracer(ilevel)%tnew(2,fin_ele(3),un_ele) &
-                                                       + tracer(ilevel)%error(3,fin_ele(2),un_ele)
+                                                       + tracer(ilevel)%tnew(3,fin_ele(2),un_ele)
         tracer(ilevel)%tnew(3,fin_ele(3),un_ele) = tracer(ilevel)%tnew(3,fin_ele(3),un_ele) &
-                                                       + tracer(ilevel)%error(2,fin_ele(2),un_ele)
+                                                       + tracer(ilevel)%tnew(2,fin_ele(2),un_ele)
         !####################### for fin_ele(4) ##################################
         tracer(ilevel)%tnew(1,fin_ele(4),un_ele) = tracer(ilevel)%tnew(1,fin_ele(4),un_ele) &
-                                                       + tracer(ilevel)%error(3,fin_ele(2),un_ele)
+                                                       + tracer(ilevel)%tnew(3,fin_ele(2),un_ele)
         tracer(ilevel)%tnew(2,fin_ele(4),un_ele) = tracer(ilevel)%tnew(2,fin_ele(4),un_ele) &
-                                                       + tracer(ilevel+1)%error(2,coarse_ele,un_ele)
+                                                       + tracer(ilevel+1)%tnew(2,coarse_ele,un_ele)
         tracer(ilevel)%tnew(3,fin_ele(4),un_ele) = tracer(ilevel)%tnew(3,fin_ele(4),un_ele) &
-                                                       + tracer(ilevel)%error(1,fin_ele(2),un_ele)
+                                                       + tracer(ilevel)%tnew(1,fin_ele(2),un_ele)
       end do
     end do
   end subroutine prolongator
