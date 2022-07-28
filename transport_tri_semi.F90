@@ -41,7 +41,7 @@ module transport_tri_semi
       integer :: g_iloc, g_jloc, target_ele, orientation
       integer, pointer :: ele22
 
-      real :: k, delta_x,omga
+      real :: k, delta_x,omga, convergence
 
       real :: sarea, volume, dt, L
       real :: length_x, length_y, theta
@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 3
+      n_split = 4
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
@@ -130,7 +130,7 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 200!time/dt
+      ntime = 1!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -288,14 +288,14 @@ module transport_tri_semi
       do itime=1,ntime
         ! generating VTK files
         if ( vtk_io <= itime ) then
-
+          if ( itime==ntime ) then
+            call get_error
+          end if
           totele_str = 4**(n_split)
           ! call get_vtu(x_all_str, tnew, totele_str*totele_unst, nloc, itime, ndim, cell_type, solve_for)
           call get_vtu(x_all_str, tracer(1)%tnew,tracer(1)%error, &
                                                 analytical,totele_str, totele_unst, totele_str*totele_unst,&
                                                 nloc, itime, ndim, cell_type, solve_for)
-
-
           ! call get_vtk(x_all_str, tnew, totele_str*totele_unst, nloc, itime,ndim, cell_type)
           vtk_io = vtk_io + vtk_interval
         end if
@@ -333,8 +333,14 @@ module transport_tri_semi
           tracer(ilevel)%tnew = 0.0
           tnew_nonlin = 0.0
 
-          do i=1,20
+          do i=1,14
             call smoother
+
+            ! call get_convergence
+            ! if ( convergence <= 1e-5 ) then
+            !   print*, 'convergence number is =', i
+            !   exit
+            ! end if
           end do
 
 
@@ -504,9 +510,13 @@ module transport_tri_semi
 
 
       subroutine get_error
-        do iloc=1,nloc
-          ! analytical(iloc,str_ele,un_ele) =  boundary(x_loc(1,iloc),x_loc(2,iloc))
-          tracer(ilevel)%error(iloc,str_ele,un_ele) = abs(tnew_nonlin_loc(iloc) - analytical(iloc,str_ele,un_ele))
+        do un_ele=1,totele_unst
+          do str_ele=1,4**n_split
+            do iloc=1,nloc
+              ! analytical(iloc,str_ele,un_ele) =  boundary(x_loc(1,iloc),x_loc(2,iloc))
+              tracer(1)%error(iloc,str_ele,un_ele) = abs(tracer(1)%tnew(iloc,str_ele,un_ele) - analytical(iloc,str_ele,un_ele))
+            end do
+          end do
         end do
       end subroutine get_error
 
@@ -681,7 +691,7 @@ module transport_tri_semi
                   call solve_Gauss_Seidel
               end select
 
-              call get_error
+              ! call get_error
             end do ! end do totele_str
           end do ! end totele_unst
         end do ! smooth
@@ -831,6 +841,22 @@ module transport_tri_semi
         end do
 
       end subroutine get_residual
+
+
+        subroutine get_convergence
+          real :: convergence_loc
+          call get_residual
+          convergence = 0.0
+          do un_ele=1,totele_unst
+            do str_ele =1,totele_str
+              convergence_loc = max(tracer(ilevel)%residuale(1,str_ele, un_ele),tracer(ilevel)%residuale(2,str_ele, un_ele)&
+                                                            ,tracer(ilevel)%residuale(3,str_ele, un_ele))
+              if ( convergence_loc > convergence ) then
+                convergence = convergence_loc
+              end if
+              end do
+            end do
+        end subroutine get_convergence
 
     end subroutine Semi_implicit_iterative
 
