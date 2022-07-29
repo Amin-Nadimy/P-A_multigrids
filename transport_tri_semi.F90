@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 4
+      n_split = 2
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
@@ -130,7 +130,7 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 30!time/dt
+      ntime = 400!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -314,12 +314,12 @@ module transport_tri_semi
 
             call smoother
 
-            call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-                        t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
+            ! call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
+            !             t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
 
-            call restrictor(tracer,totele_unst, i_split, multi_levels, ilevel)
-
-            call get_residual
+            ! call restrictor(tracer,totele_unst, i_split, multi_levels, ilevel)
+            ! !
+            ! call get_residual
 
           end do ! ilevel multigrids
 
@@ -331,35 +331,35 @@ module transport_tri_semi
           ! allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
           ! tracer(ilevel)%tnew = 0.0
           ! tnew_nonlin = 0.0
-          !
+          ! !
           ! do i=1,14
           !   call smoother
           !
-          !   ! call get_convergence
-          !   ! if ( convergence <= 1e-5 ) then
-          !   !   print*, 'convergence number is =', i
-          !   !   exit
+          ! !   ! call get_convergence
+          ! !   ! if ( convergence <= 1e-5 ) then
+          ! !   !   print*, 'convergence number is =', i
+          ! !   !   exit
           !   ! end if
           ! end do
-
+          !
 
           ! ######################### Prolongation ##########################
-          ! do ilevel = multi_levels-1,1,-1
-          !   i_split = n_split-ilevel+1
-          !
-          !   call prolongator(tracer, totele_unst, i_split, ilevel)
-          !
-          !   if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
-          !   allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
-          !   tracer(ilevel)%tnew = 0.0
-          !   tnew_nonlin = 0.0
-          !   !
-          !   call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
-          !               t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
-          !
-          !   call smoother
-          !
-          ! end do !ilevel
+          do ilevel = multi_levels-1,1,-1
+            i_split = n_split-ilevel+1
+
+            ! call prolongator(tracer, totele_unst, i_split, ilevel)
+            !
+            ! if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+            ! allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+            ! tracer(ilevel)%tnew = 0.0
+            ! tnew_nonlin = 0.0
+            ! !
+            ! call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
+            !             t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
+            !
+            ! call smoother
+
+          end do !ilevel
         end do ! n_multigrid
         print*, 'semi', itime
       end do ! do itime=1,ntime
