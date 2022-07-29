@@ -311,7 +311,7 @@ module transport_tri_semi
             allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
             tnew_nonlin =0.0 ! AMIN, if initialise here the results would be different with multi_levels==1
             tracer(ilevel)%tnew = 0.0 ! AMIN, if initialise here the results would be different with multi_levels==1
-print*, ilevel, i_split, totele_str
+
             call smoother
 
             call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&

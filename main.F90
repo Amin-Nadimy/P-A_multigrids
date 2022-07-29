@@ -43,7 +43,7 @@ program Transport_equation
       case(9)
         ! (CFL, ndim, direct_solver, n_multigrid, time, nits, nface, dx, dy,&
         !           nloc, snloc, ngi, sngi, n_s_list_no, u_x, u_y, with_stab, vtk_interval, cell_type, solver, multi_levels,n_smooth)
-        call Semi_implicit_iterative(1., 2, .false., 1, .025*0.005*150, 2, 3, 0.000125, 0.000125, 3, 2, 3, 2, 3, 0.,&
+        call Semi_implicit_iterative(1., 2, .false., 1, .025*0.005*150, 2, 3, 0.000125/2, 0.000125/2, 3, 2, 3, 2, 3, 0.,&
          0., .false., 1, 5, 3, 1,4)
 
       case(10)
