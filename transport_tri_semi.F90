@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 2
+      n_split = 3
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
@@ -145,7 +145,7 @@ module transport_tri_semi
       allocate(SN_orig(sngi,snloc),SNLX_orig(sngi,sndim,snloc), s_cont(sngi,ndim),s_cont_old(sngi,ndim) )
       allocate(ugi(ngi,ndim))
       allocate(xsgi(sngi,ndim), usgi(sngi,ndim), usgi2(sngi,ndim), income(sngi), snorm(sngi,ndim), norm(ndim))
-      ! allocate(tnew_nonlin(nloc,totele_str,totele_unst))
+      allocate(tnew_nonlin(nloc,totele_str,totele_unst))
       allocate(t_bc(2), u_bc(ndim,2**n_split*nloc,4)) ! it works just for semi_mesh.msh
       allocate(tnew_gi(ngi),tnew_xgi(ngi,ndim),tnew_sgi(sngi),tnew_sgi2(sngi),told_gi(ngi),told_sgi(sngi),told_sgi2(sngi))
       allocate(face_sn(sngi,nloc,nface), face_sn2(sngi,nloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
@@ -309,55 +309,56 @@ module transport_tri_semi
             i_split = n_split-ilevel+1
             if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
             allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
-            tnew_nonlin =0.0 ! AMIN, if initialise here the results would be different with multi_levels==1
-            tracer(ilevel)%tnew = 0.0 ! AMIN, if initialise here the results would be different with multi_levels==1
+            tnew_nonlin = tracer(ilevel)%tnew
+            ! tnew_nonlin =0.0 ! AMIN, if initialise here the results would be different with multi_levels==1
+            ! tracer(ilevel)%tnew = 0.0 ! AMIN, if initialise here the results would be different with multi_levels==1
 
             call smoother
 
             ! call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
             !             t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
 
-            ! call restrictor(tracer,totele_unst, i_split, multi_levels, ilevel)
-            ! !
-            ! call get_residual
+            call restrictor(tracer,totele_unst, i_split, multi_levels, ilevel)
+            !
+            call get_residual
 
           end do ! ilevel multigrids
 
 
           ! ################### solve the coarsest level ####################
-          ! ilevel = multi_levels
-          ! i_split = n_split-ilevel+1
-          ! if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
-          ! allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+          ilevel = multi_levels
+          i_split = n_split-ilevel+1
+          if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+          allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+          tnew_nonlin = tracer(ilevel)%tnew
           ! tracer(ilevel)%tnew = 0.0
-          ! tnew_nonlin = 0.0
-          ! !
-          ! do i=1,14
-          !   call smoother
           !
-          ! !   ! call get_convergence
-          ! !   ! if ( convergence <= 1e-5 ) then
-          ! !   !   print*, 'convergence number is =', i
-          ! !   !   exit
-          !   ! end if
-          ! end do
-          !
+          do i=1,14
+            call smoother
+
+            call get_convergence
+            if ( convergence <= 1e-5 ) then
+              ! print*, 'convergence number is =', i
+              exit
+            end if
+          end do
+
 
           ! ######################### Prolongation ##########################
           do ilevel = multi_levels-1,1,-1
             i_split = n_split-ilevel+1
-
-            ! call prolongator(tracer, totele_unst, i_split, ilevel)
-            !
-            ! if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
-            ! allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+            if (allocated(tnew_nonlin)) deallocate(tnew_nonlin)
+            allocate(tnew_nonlin(nloc,4**(i_split),totele_unst))
+            tnew_nonlin = tracer(ilevel)%tnew
             ! tracer(ilevel)%tnew = 0.0
-            ! tnew_nonlin = 0.0
-            ! !
+
+            call prolongator(tracer, totele_unst, i_split, ilevel)
+            !
+            !
             ! call update_overlaps(meshlist,ele_info(ilevel)%surf_ele, tracer(ilevel)%tnew, tracer(ilevel)%told,&
             !             t_bc, i_split, nface,totele_unst, nloc, ele_info(ilevel)%str_neig)
-            !
-            ! call smoother
+
+            call smoother
 
           end do !ilevel
         end do ! n_multigrid
