@@ -97,7 +97,7 @@ module transport_tri_semi
       call CPU_TIME(t1_ReadMSH)
       ! call ReadMSH(meshList,'./1_unele_test.msh',ierr, totnodes)
       ! call ReadMSH(meshList,'./2_unele_test.msh',ierr, totnodes)
-      call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/5_split.msh',ierr, totnodes)
+      call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/4_split.msh',ierr, totnodes)
       ! call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
       ! call ReadMSH(meshList,'./semi_structured_mesh.msh',ierr, totnodes)
       ! call ReadMSH(meshList,'./P_structured_mesh',ierr, totnodes)
@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 1
+      n_split = 3
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
