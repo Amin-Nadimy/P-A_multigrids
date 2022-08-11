@@ -13,7 +13,7 @@ program Transport_equation
 
   implicit none
 
-  integer :: mode = 9
+  integer :: mode = 4
   select case(mode)
       case(1)
         call trans_rec(0.7, 2, .false., 10, 250., 2, 2*100, 1, 4, 4, 2, 4, 2, 4, 2*0.01428571, 0.0, .true.)
@@ -25,7 +25,7 @@ program Transport_equation
         call str_implicit(0.7, 2, .false., 10, 0.07*30, 2, 2, 1, 3, 0.1, 0.1, 3, 2, 3, 2, 3, 0.1, 0.0, .true.,1,5)
 !=====================================================================================================================================
       case(4)
-        call unstr_explicit(0.7, 2, .false., 10, 0.7*0.1*1, 2,3, 0.001 , 0.001, 3, 2, 3, 2, 3, 0.9, 0., .true., 1, 5)
+        call unstr_explicit(0.07, 2, .false., 10, 0.07*0.01*2, 2,3, 0.001 , 0.001, 3, 2, 3, 2, 3, 0.9, 0., .true., 1, 5)
 
       case(5)
         call unstr_implicit(.7, 2, .false., 1, .7*.1*2, &
@@ -44,7 +44,7 @@ program Transport_equation
         ! (CFL, ndim, direct_solver, n_multigrid, time, nits, nface, dx, dy,&
         !           nloc, snloc, ngi, sngi, n_s_list_no, u_x, u_y, with_stab, vtk_interval, cell_type, solver, multi_levels,n_smooth)
         call Semi_implicit_iterative(1., 2, .false., 2, .025*0.005*150, 2, 3, 0.000125, 0.000125, 3, 2, 3, 2, 3, 0.,&
-         0., .false., 1, 5, 1, 3,4)
+         0., .false., 1, 5, 1, 1,4)
 
       case(10)
         call Semi_implicit_iterative_P(.7, 2, .false., 10, .7*0.1*40, 2, 3, 0.1, 0.1, 3, 2, 3, 2, 3, 0.1, 0.1, .true., 1, 5)

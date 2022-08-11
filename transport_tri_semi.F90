@@ -111,7 +111,7 @@ module transport_tri_semi
 
       totele_unst = size(meshList)
       theta = 1.
-      n_split = 3
+      n_split = 1
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
@@ -130,7 +130,7 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 2!time/dt
+      ntime = 3!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -283,7 +283,6 @@ module transport_tri_semi
       print*, '|   dt    = ', dt
       print*, '---------------------------------------------------------'
       call CPU_TIME(t1)
-
 
       do itime=1,ntime
         ! generating VTK files

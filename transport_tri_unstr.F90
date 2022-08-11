@@ -470,9 +470,10 @@ module transport_tri_unstr
     ! call ReadMSH(meshList,'./semi_mesh.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./10_elements.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./4_elements.msh',ierr, totnodes)
-    print*, 'starting reading the .msh file'
+    print*, 'starting time for reading the .msh file'
     call CPU_TIME(t1_ReadMSH)
     call ReadMSH(meshList,'./untitled2048.msh',ierr, totnodes)
+    ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/Fully_unstr.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
 
     call CPU_TIME(t2_ReadMSH)
