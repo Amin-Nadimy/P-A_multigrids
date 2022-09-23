@@ -9,32 +9,57 @@ module ShapFun
     ! it works only for semi-structured
     ! get_loc_sgi return its firs line of vbls
     subroutine get_loc_sgi(tnew_sgi, tnew_sgi2, told_sgi, told_sgi2,usgi,usgi2,iface,str_ele,un_ele,&
-                          u_loc, u_loc2, sn, sn2, tnew_loc, tnew_loc2, told_loc, told_loc2, nloc, ndim)
+                          u_loc, u_loc2, sn, sn2, tnew_loc, tnew_loc2, told_loc, told_loc2, nloc, ndim,face_nodes)
       implicit none
       ! external vbl
       integer, intent(in) :: nloc, ndim,iface,str_ele,un_ele
       real, dimension(:), intent(inout) :: tnew_sgi, tnew_sgi2, told_loc, told_loc2, told_sgi,told_sgi2
       real, dimension(:,:), intent(inout) :: u_loc2,usgi, usgi2, sn, sn2
-      real,intent(in) :: tnew_loc2(:,:,:,:)
+      real,intent(in) :: tnew_loc2(:,:,:,:), face_nodes(:,:)
       real,pointer, intent(in) :: tnew_loc(:),u_loc(:,:)
       !local vbl
       integer :: iloc, idim
+      real:: stnew_loc2(2,3)
 
       ! if you want to have this in the code just repleace call get_loc_sgi in the code by the lines below
       usgi=0.0; usgi2=0.0; tnew_sgi=0.0; tnew_sgi2=0.0; told_sgi=0.0; told_sgi2=0.0!; xsgi=0.0
 
-      do iloc=1,nloc ! use all of the nodes not just the surface nodes.
+      ! do iloc=1,nloc ! use all of the nodes not just the surface nodes.
+      !   do idim=1,ndim
+      !     usgi(:,idim)  = usgi(:,idim)  + sn(:,iloc)*u_loc(idim,iloc)
+      !     usgi2(:,idim) = usgi2(:,idim) + sn2(:,iloc)*u_loc2(idim,iloc)
+      !     ! xsgi(:,idim)  = xsgi(:,idim)  + sn(:,iloc)*x_loc(idim,iloc)
+      !   end do
+      !   tnew_sgi  = tnew_sgi(:)  + sn(:,iloc)*tnew_loc(iloc)
+      !   tnew_sgi2 = tnew_sgi2(:) + sn2(:,iloc)*tnew_loc2(iloc,str_ele,un_ele,iface)
+      !
+      !   told_sgi  = told_sgi(:)  + sn(:,iloc)*told_loc(iloc)
+      !   told_sgi2 = told_sgi2(:) + sn2(:,iloc)*told_loc2(iloc)
+      ! end do
+      stnew_loc2(2,iface) = tnew_loc(face_nodes(1,iface))
+      stnew_loc2(1,iface) = tnew_loc(face_nodes(2,iface))
+
+
+      do iloc=1,2 ! use all of the nodes not just the surface nodes.
         do idim=1,ndim
           usgi(:,idim)  = usgi(:,idim)  + sn(:,iloc)*u_loc(idim,iloc)
+        end do
+        tnew_sgi  = tnew_sgi(:)  + sn(:,iloc)*tnew_loc(iloc)
+
+        told_sgi  = told_sgi(:)  + sn(:,iloc)*told_loc(iloc)
+      end do
+
+
+      do iloc=1,nloc ! use all of the nodes not just the surface nodes.
+        do idim=1,ndim
           usgi2(:,idim) = usgi2(:,idim) + sn2(:,iloc)*u_loc2(idim,iloc)
           ! xsgi(:,idim)  = xsgi(:,idim)  + sn(:,iloc)*x_loc(idim,iloc)
         end do
-        tnew_sgi  = tnew_sgi(:)  + sn(:,iloc)*tnew_loc(iloc)
         tnew_sgi2 = tnew_sgi2(:) + sn2(:,iloc)*tnew_loc2(iloc,str_ele,un_ele,iface)
 
-        told_sgi  = told_sgi(:)  + sn(:,iloc)*told_loc(iloc)
         told_sgi2 = told_sgi2(:) + sn2(:,iloc)*told_loc2(iloc)
       end do
+
 
     end subroutine get_loc_sgi
 

@@ -43,7 +43,7 @@ module transport_tri_semi
 
       real :: k, delta_x,omga, convergence
 
-      real :: sarea, volume, dt, L
+      real :: sarea, volume, dt, L,face_nodes(2,3)
       real :: length_x, length_y, theta
       real :: t1, t2, t3,t4,surface_time, t1_get_shape_funs_spec, t2_get_shape_funs_spec
       real :: t1_tri_det_nlx, t2_tri_det_nlx, time_tri_det_nlx, i_tri_det_nlx
@@ -96,7 +96,7 @@ module transport_tri_semi
       print*, '|       Reading the .msh file     |'
       call CPU_TIME(t1_ReadMSH)
       ! call ReadMSH(meshList,'./1_unele_test.msh',ierr, totnodes)
-      call ReadMSH(meshList,'./Mesh_files/2_unele_test.msh',ierr, totnodes)
+      call ReadMSH(meshList,'./Mesh_files/test_sn2.msh',ierr, totnodes)
 
       ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/4_split.msh',ierr, totnodes) ! it is for a square domain
       ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/circle/330_un_ele/Circulo_1_splt.msh',ierr, totnodes) ! it is for a circle doain
@@ -115,7 +115,7 @@ module transport_tri_semi
       totele_unst = size(meshList)
 
       theta = 1.
-      n_split = 2
+      n_split = 1
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
@@ -132,18 +132,26 @@ module transport_tri_semi
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 1!time/dt
+      ntime = 2!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
       npoly=1; ele_type= 101
       omga = 0.8
 
+      face_nodes(1,1) = 1
+      face_nodes(2,1) = 3
+      face_nodes(1,2) = 3
+      face_nodes(2,2) = 2
+      face_nodes(1,3) = 2
+      face_nodes(2,3) = 1
+
+
       allocate(n( ngi, nloc ), nx( ngi, ndim, nloc ), nlx( ngi, ndim, nloc ), M(ngi,nloc))
       allocate(nlx_lxx(ngi,ndim,nloc), nlxx(ngi,nloc), nlx_nod(nloc,ndim,nloc))
       allocate(weight(ngi))
       allocate(face_list_no( nface, totele_str), face_ele(nface,totele_str))
-      allocate(sn2(sngi,nloc),snlx(sngi,sndim,nloc))
+      allocate(sn2(sngi,snloc),snlx(sngi,sndim,nloc))
       allocate(SN_orig(sngi,snloc),SNLX_orig(sngi,sndim,snloc), s_cont(sngi,ndim),s_cont_old(sngi,ndim) )
       allocate(ugi(ngi,ndim))
       allocate(xsgi(sngi,ndim), usgi(sngi,ndim), usgi2(sngi,ndim), income(sngi), snorm(sngi,ndim), norm(ndim))
@@ -151,7 +159,7 @@ module transport_tri_semi
       allocate(t_bc(2), u_bc(ndim,2**n_split*nloc,4)) ! it works just for semi_mesh.msh
       allocate(tnew_gi(ngi),tnew_xgi(ngi,ndim),tnew_sgi(sngi),tnew_sgi2(sngi),told_gi(ngi),told_sgi(sngi),told_sgi2(sngi))
       allocate(face_sn(sngi,nloc,nface), face_sn2(sngi,nloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
-      allocate(face_sn_str(sngi,nloc,nface), face_sn2_str(sngi,nloc,n_s_list_no), face_snlx_str(sngi,sndim,nloc,nface))
+      allocate(face_sn_str(sngi,snloc,nface), face_sn2_str(sngi,nloc,n_s_list_no), face_snlx_str(sngi,sndim,nloc,nface))
       allocate(x_loc(ndim,nloc))
       allocate(ml_ele(nloc))
       allocate(rhs_jac(nloc), mass_t_new(nloc), inv_jac(ngi, ndim, ndim ), tnew_loc2(nloc,totele_str,totele_unst,nface) )
@@ -238,7 +246,7 @@ module transport_tri_semi
           call getNeigDataMesh(meshlist, un_ele, iface, Npos, Nside, lnodes2)
           call get_d_center(MeshList,un_ele, Npos, iface, nface, nloc, n_split,ele_info(1)%str_neig)
         end do
-        if ( meshList(un_ele)%region_id == 1 ) then
+        if ( meshList(un_ele)%region_id == 4 ) then
           tracer(1)%tnew(:,:,un_ele) = 1.
         end if
       end do
@@ -343,11 +351,11 @@ module transport_tri_semi
           do i=1,15
             call smoother
 
-            call get_convergence
-            if ( convergence <= 1e-5 ) then
-              print*, 'convergence number is =', i
-              exit
-            end if
+            ! call get_convergence
+            ! if ( convergence <= 1e-5 ) then
+            !   print*, 'convergence number is =', i
+            !   exit
+            ! end if
           end do
 
 
@@ -458,10 +466,12 @@ module transport_tri_semi
 
 
       subroutine get_diff_surf_stencl
-        do iloc=1,nloc
-          do jloc=1,nloc
-            my_diff_surf(iloc,jloc,iface) =  (k/delta_x)*sum(sn(:,iloc) *sn(:,jloc) * sdetwei(:))
-            Neig_diff_surf(iloc,jloc,iface) =(k/delta_x)*sum(sn(:,iloc) *sn2(:,jloc)* sdetwei(:))
+        do iloc=1,snloc
+          do jloc=1,snloc
+            my_diff_surf(face_nodes(iloc,iface),face_nodes(jloc,iface),iface)=&
+            (k/delta_x)*sum(sn(:,iloc) *sn(:,jloc) * sdetwei(:))
+            Neig_diff_surf(face_nodes(iloc,iface),face_nodes(jloc,iface),iface)=&
+            (k/delta_x)*sum(sn(:,iloc) *sn2(:,jloc)* sdetwei(:))
           end do
         end do ! iloc
       end subroutine get_diff_surf_stencl
@@ -607,74 +617,74 @@ module transport_tri_semi
 
               call CPU_TIME(t3)
               do iface = 1,nface
-                ele22 => ele_info(ilevel)%str_neig(iface,str_ele)!face_ele( iface, ele) ! if ele22 is 0 assume on boundary
-                i_got_boundary = (sign(1, -ele22) + 1 )/2
-                ele2 = str_ele*i_got_boundary + ele22*(1-i_got_boundary)! if ele22=0, then ele2=ele, if ele22/=0, ele2=ele22
-
-                !######################## vol and surf shape functions ############
-                sn => face_sn_str(:,:,iface)
-                ! snlx = face_snlx_str(:,:,:,iface)
-                sn2=0
-                if ( ele22==0 ) then
-                      if ( iface==1 ) then
-                        sp = ipos/2+1 ! position of ele along the un_iface
-                        mface = 1 ! un_iface number which str_ele is located on
-                      elseif ( iface==2 ) then
-                        sp = irow
-                        mface = 3
-                      else
-                        sp = irow
-                        mface = 2
-                      end if
-                      call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
-                else
-                  sn2  = face_sn2_str(:,:,iface)
-                end if ! end if ele22=0
-
-
-                ! ###################################################################################
-                 if ( i_got_boundary < 1e-1 ) then
-                   tnew_loc2(:,str_ele,un_ele,iface) = tracer(ilevel)%tnew(:,ele2, un_ele)
-                   tnew_nonlin_loc2(:,str_ele,un_ele,iface) = tnew_nonlin(:,ele2, un_ele)
-                   told_loc2 => tracer(ilevel)%told(:,ele2, un_ele)
-                   u_loc2 => mesh_pnt%ptr%u_ele(:,:,ele2)
-                 else
-                   tnew_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
-                   tnew_nonlin_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
-                   told_loc2 => mesh_pnt%ptr%t_overlap_old( (sp)*nloc-2:(sp)*nloc, mface )
-                   u_loc2 => mesh_pnt%ptr%u_overlap(:, sp*nloc-2:sp*nloc, mface )
-                 end if
-
-                call get_loc_sgi(tnew_sgi, tnew_sgi2, told_sgi, told_sgi2,usgi,usgi2,iface,str_ele,un_ele,&
-                                      u_loc, u_loc2, sn, sn2, tnew_loc, tnew_loc2, told_loc, told_loc2, nloc, ndim)
-
-                ! ############################# get flux ############################################
-                sdetwei => mesh_pnt%ptr%scaling_var(ilevel)%sdetwei(:,iface)
-                snorm = updown * mesh_pnt%ptr%snorm(:,:,iface)
-                ! income=1 if info is comming from neighbouring element.
-
-                do s_gi=1,sngi
-                  income(s_gi)=0.5 + 0.5*sign(1.0, -sum(snorm(s_gi,:)*0.5*(usgi(s_gi,:)+usgi2(s_gi,:)))  )
-                end do
-
-                do idim=1,ndim
-                  s_cont(:,idim) = snorm(:,idim)*sdetwei(:) &
-                        *( (1.-income(:))*usgi(:,idim)*tnew_sgi(:) + income(:)*tnew_sgi2(:)*usgi2(:,idim) )
-                  s_cont_old(:,idim) = snorm(:,idim)*sdetwei(:) &
-                        *( (1.-income(:))*usgi(:,idim)*told_sgi(:) + income(:)*told_sgi2(:)*usgi2(:,idim) )
-                end do
-
-                do iloc=1,nloc
-                  do idim=1,ndim
-                    flux_ele_new(iloc)  = flux_ele_new(iloc)  + sum( sn(:,iloc)*s_cont(:,idim) )
-                    flux_ele_old(iloc)  = flux_ele_old(iloc)  + sum( sn(:,iloc)*s_cont_old(:,idim) )
-                  end do
-                end do
-
-                !################################# end get flux ##########################################
-                call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, i_split, n, ngi, sngi, ele22,sn2,&
-                                      nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
-                call get_diff_surf_stencl
+                ! ele22 => ele_info(ilevel)%str_neig(iface,str_ele)!face_ele( iface, ele) ! if ele22 is 0 assume on boundary
+                ! i_got_boundary = (sign(1, -ele22) + 1 )/2
+                ! ele2 = str_ele*i_got_boundary + ele22*(1-i_got_boundary)! if ele22=0, then ele2=ele, if ele22/=0, ele2=ele22
+                !
+                ! !######################## vol and surf shape functions ############
+                ! sn => face_sn_str(:,:,iface)
+                ! ! snlx = face_snlx_str(:,:,:,iface)
+                ! sn2=0
+                ! if ( ele22==0 ) then
+                !       if ( iface==1 ) then
+                !         sp = ipos/2+1 ! position of ele along the un_iface
+                !         mface = 1 ! un_iface number which str_ele is located on
+                !       elseif ( iface==2 ) then
+                !         sp = irow
+                !         mface = 3
+                !       else
+                !         sp = irow
+                !         mface = 2
+                !       end if
+                !       call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
+                ! else
+                !   sn2  = face_sn2_str(:,:,iface)
+                ! end if ! end if ele22=0
+                !
+                !
+                ! ! ###################################################################################
+                !  if ( i_got_boundary < 1e-1 ) then
+                !    tnew_loc2(:,str_ele,un_ele,iface) = tracer(ilevel)%tnew(:,ele2, un_ele)
+                !    tnew_nonlin_loc2(:,str_ele,un_ele,iface) = tnew_nonlin(:,ele2, un_ele)
+                !    told_loc2 => tracer(ilevel)%told(:,ele2, un_ele)
+                !    u_loc2 => mesh_pnt%ptr%u_ele(:,:,ele2)
+                !  else
+                !    tnew_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
+                !    tnew_nonlin_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
+                !    told_loc2 => mesh_pnt%ptr%t_overlap_old( (sp)*nloc-2:(sp)*nloc, mface )
+                !    u_loc2 => mesh_pnt%ptr%u_overlap(:, sp*nloc-2:sp*nloc, mface )
+                !  end if
+                !
+                ! call get_loc_sgi(tnew_sgi, tnew_sgi2, told_sgi, told_sgi2,usgi,usgi2,iface,str_ele,un_ele,&
+                !                       u_loc, u_loc2, sn, sn2, tnew_loc, tnew_loc2, told_loc, told_loc2, nloc, ndim,face_nodes)
+                !
+                ! ! ############################# get flux ############################################
+                ! sdetwei => mesh_pnt%ptr%scaling_var(ilevel)%sdetwei(:,iface)
+                ! snorm = updown * mesh_pnt%ptr%snorm(:,:,iface)
+                ! ! income=1 if info is comming from neighbouring element.
+                !
+                ! do s_gi=1,sngi
+                !   income(s_gi)=0.5 + 0.5*sign(1.0, -sum(snorm(s_gi,:)*0.5*(usgi(s_gi,:)+usgi2(s_gi,:)))  )
+                ! end do
+                !
+                ! do idim=1,ndim
+                !   s_cont(:,idim) = snorm(:,idim)*sdetwei(:) &
+                !         *( (1.-income(:))*usgi(:,idim)*tnew_sgi(:) + income(:)*tnew_sgi2(:)*usgi2(:,idim) )
+                !   s_cont_old(:,idim) = snorm(:,idim)*sdetwei(:) &
+                !         *( (1.-income(:))*usgi(:,idim)*told_sgi(:) + income(:)*told_sgi2(:)*usgi2(:,idim) )
+                ! end do
+                !
+                ! do iloc=1,snloc
+                !   do idim=1,ndim
+                !     flux_ele_new(face_nodes(iloc,iface))=flux_ele_new(face_nodes(iloc,iface))+sum( sn(:,iloc)*s_cont(:,idim) )
+                !     flux_ele_old(face_nodes(iloc,iface))=flux_ele_old(face_nodes(iloc,iface))+sum( sn(:,iloc)*s_cont_old(:,idim))
+                !   end do
+                ! end do
+                !
+                ! !################################# end get flux ##########################################
+                ! call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, i_split, n, ngi, sngi, ele22,sn2,&
+                !                       nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
+                ! call get_diff_surf_stencl
               end do ! iface
               call CPU_TIME(t4)
               surface_time = surface_time + t4-t3
@@ -772,75 +782,78 @@ module transport_tri_semi
             diff_surf=0.0
             my_diff_surf =0.0
             Neig_diff_surf =0.0
+
+
+
             call CPU_TIME(t3)
             do iface = 1,nface
-              ele22 => ele_info(ilevel)%str_neig(iface,str_ele)!face_ele( iface, ele) ! if ele22 is 0 assume on boundary
-              i_got_boundary = (sign(1, -ele22) + 1 )/2
-              ele2 = str_ele*i_got_boundary + ele22*(1-i_got_boundary)! if ele22=0, then ele2=ele, if ele22/=0, ele2=ele22
-
-              !######################## vol and surf shape functions ############
-              sn => face_sn_str(:,:,iface)
-              ! snlx = face_snlx_str(:,:,:,iface)
-              sn2=0
-              if ( ele22==0 ) then
-                    if ( iface==1 ) then
-                      sp = ipos/2+1 ! position of ele along the un_iface
-                      mface = 1 ! un_iface number which str_ele is located on
-                    elseif ( iface==2 ) then
-                      sp = irow
-                      mface = 3
-                    else
-                      sp = irow
-                      mface = 2
-                    end if
-                    call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
-              else
-                sn2  = face_sn2_str(:,:,iface)
-              end if ! end if ele22=0
-
-              ! ###################################################################################
-               if ( i_got_boundary < 1e-1 ) then
-                 tnew_loc2(:,str_ele,un_ele,iface) = tracer(ilevel)%tnew(:,ele2, un_ele)
-                 tnew_nonlin_loc2(:,str_ele,un_ele,iface) = tnew_nonlin(:,ele2, un_ele)
-                 told_loc2 => tracer(ilevel)%told(:,ele2, un_ele)
-                 u_loc2 => mesh_pnt%ptr%u_ele(:,:,ele2)
-               else
-                 tnew_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
-                 tnew_nonlin_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
-                 told_loc2 => mesh_pnt%ptr%t_overlap_old( (sp)*nloc-2:(sp)*nloc, mface )
-                 u_loc2 => mesh_pnt%ptr%u_overlap(:, sp*nloc-2:sp*nloc, mface )
-               end if
-
-              call get_loc_sgi(tnew_sgi, tnew_sgi2, told_sgi, told_sgi2,usgi,usgi2,iface,str_ele,un_ele,&
-                                    u_loc, u_loc2, sn, sn2, tnew_loc, tnew_loc2, told_loc, told_loc2, nloc, ndim)
-
-              ! ############################# get flux ############################################
-              sdetwei => mesh_pnt%ptr%scaling_var(ilevel)%sdetwei(:,iface)
-              snorm = updown * mesh_pnt%ptr%snorm(:,:,iface)
-              ! income=1 if info is comming from neighbouring element.
-
-              do s_gi=1,sngi
-                income(s_gi)=0.5 + 0.5*sign(1.0, -sum(snorm(s_gi,:)*0.5*(usgi(s_gi,:)+usgi2(s_gi,:)))  )
-              end do
-
-              do idim=1,ndim
-                s_cont(:,idim) = snorm(:,idim)*sdetwei(:) &
-                      *( (1.-income(:))*usgi(:,idim)*tnew_sgi(:) + income(:)*tnew_sgi2(:)*usgi2(:,idim) )
-                s_cont_old(:,idim) = snorm(:,idim)*sdetwei(:) &
-                      *( (1.-income(:))*usgi(:,idim)*told_sgi(:) + income(:)*told_sgi2(:)*usgi2(:,idim) )
-              end do
-
-              do iloc=1,nloc
-                do idim=1,ndim
-                  flux_ele_new(iloc)  = flux_ele_new(iloc)  + sum( sn(:,iloc)*s_cont(:,idim) )
-                  flux_ele_old(iloc)  = flux_ele_old(iloc)  + sum( sn(:,iloc)*s_cont_old(:,idim) )
-                end do
-              end do
-
-              !################################# end get flux ##########################################
-              call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, i_split, n, ngi, sngi, ele22,sn2,&
-                                    nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
-              call get_diff_surf_stencl
+              ! ele22 => ele_info(ilevel)%str_neig(iface,str_ele)!face_ele( iface, ele) ! if ele22 is 0 assume on boundary
+              ! i_got_boundary = (sign(1, -ele22) + 1 )/2
+              ! ele2 = str_ele*i_got_boundary + ele22*(1-i_got_boundary)! if ele22=0, then ele2=ele, if ele22/=0, ele2=ele22
+              !
+              ! !######################## vol and surf shape functions ############
+              ! sn => face_sn_str(:,:,iface)
+              ! ! snlx = face_snlx_str(:,:,:,iface)
+              ! sn2=0
+              ! if ( ele22==0 ) then
+              !       if ( iface==1 ) then
+              !         sp = ipos/2+1 ! position of ele along the un_iface
+              !         mface = 1 ! un_iface number which str_ele is located on
+              !       elseif ( iface==2 ) then
+              !         sp = irow
+              !         mface = 3
+              !       else
+              !         sp = irow
+              !         mface = 2
+              !       end if
+              !       call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
+              ! else
+              !   sn2  = face_sn2_str(:,:,iface)
+              ! end if ! end if ele22=0
+              !
+              ! ! ###################################################################################
+              !  if ( i_got_boundary < 1e-1 ) then
+              !    tnew_loc2(:,str_ele,un_ele,iface) = tracer(ilevel)%tnew(:,ele2, un_ele)
+              !    tnew_nonlin_loc2(:,str_ele,un_ele,iface) = tnew_nonlin(:,ele2, un_ele)
+              !    told_loc2 => tracer(ilevel)%told(:,ele2, un_ele)
+              !    u_loc2 => mesh_pnt%ptr%u_ele(:,:,ele2)
+              !  else
+              !    tnew_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
+              !    tnew_nonlin_loc2(:,str_ele,un_ele,iface) = mesh_pnt%ptr%t_overlap( (sp)*nloc-2:(sp)*nloc, mface )
+              !    told_loc2 => mesh_pnt%ptr%t_overlap_old( (sp)*nloc-2:(sp)*nloc, mface )
+              !    u_loc2 => mesh_pnt%ptr%u_overlap(:, sp*nloc-2:sp*nloc, mface )
+              !  end if
+              !
+              ! call get_loc_sgi(tnew_sgi, tnew_sgi2, told_sgi, told_sgi2,usgi,usgi2,iface,str_ele,un_ele,&
+              !                       u_loc, u_loc2, sn, sn2, tnew_loc, tnew_loc2, told_loc, told_loc2, nloc, ndim,face_nodes)
+              !
+              ! ! ############################# get flux ############################################
+              ! sdetwei => mesh_pnt%ptr%scaling_var(ilevel)%sdetwei(:,iface)
+              ! snorm = updown * mesh_pnt%ptr%snorm(:,:,iface)
+              ! ! income=1 if info is comming from neighbouring element.
+              !
+              ! do s_gi=1,sngi
+              !   income(s_gi)=0.5 + 0.5*sign(1.0, -sum(snorm(s_gi,:)*0.5*(usgi(s_gi,:)+usgi2(s_gi,:)))  )
+              ! end do
+              !
+              ! do idim=1,ndim
+              !   s_cont(:,idim) = snorm(:,idim)*sdetwei(:) &
+              !         *( (1.-income(:))*usgi(:,idim)*tnew_sgi(:) + income(:)*tnew_sgi2(:)*usgi2(:,idim) )
+              !   s_cont_old(:,idim) = snorm(:,idim)*sdetwei(:) &
+              !         *( (1.-income(:))*usgi(:,idim)*told_sgi(:) + income(:)*told_sgi2(:)*usgi2(:,idim) )
+              ! end do
+              !
+              ! do iloc=1,snloc
+              !   do idim=1,ndim
+              !     flux_ele_new(face_nodes(iloc,iface))=flux_ele_new(face_nodes(iloc,iface))+sum( sn(:,iloc)*s_cont(:,idim) )
+              !     flux_ele_old(face_nodes(iloc,iface))=flux_ele_old(face_nodes(iloc,iface))+sum( sn(:,iloc)*s_cont_old(:,idim))
+              !   end do
+              ! end do
+              !
+              ! !################################# end get flux ##########################################
+              ! call add_diffusion_surf(meshlist, un_ele, mface, iface, nface, k, i_split, n, ngi, sngi, ele22,sn2,&
+              !                       nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
+              ! call get_diff_surf_stencl
             end do ! iface
             call CPU_TIME(t4)
             surface_time = surface_time + t4-t3

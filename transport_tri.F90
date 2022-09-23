@@ -481,7 +481,6 @@ module transport_tri
               nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn, face_sn2, face_snlx, &
               sweight, npoly, ele_type, totele)!, face_list_no)
 
-
     ! call CPU_TIME(t2_get_shape_funs_spec)
 
     ! time_tri_ele_info2 = 0.0
