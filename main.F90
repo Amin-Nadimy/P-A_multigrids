@@ -19,7 +19,7 @@ program Transport_equation
         call trans_rec(0.7, 2, .false., 10, 250., 2, 2*100, 1, 4, 4, 2, 4, 2, 4, 2*0.01428571, 0.0, .false.)
 
       case(2)
-        call str_explicit(0.7, 2, .false., 10, 0.07*2, 2, 20, 2, 3, 0.1, 0.1, 3, 2, 3, 2, 3, 0.1, 0.05, .false.,1,5)
+        call str_explicit(0.7, 2, .false., 10, 0.07*2, 2, 20, 2, 3, 0.1, 0.1, 3, 2, 3, 2, 3, -0.05, 0.05, .false.,1,5)
 
       case(3)
         call str_implicit(0.7, 2, .false., 10, 0.07*30, 2, 2, 1, 3, 0.1, 0.1, 3, 2, 3, 2, 3, 0.1, 0.0, .true.,1,5)

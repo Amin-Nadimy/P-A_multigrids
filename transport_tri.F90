@@ -441,10 +441,10 @@ module transport_tri
     tnew(:,:) = 0.0
     face_nodes(2,1) = 1
     face_nodes(1,1) = 3
-    face_nodes(2,2) = 3
-    face_nodes(1,2) = 2
-    face_nodes(2,3) = 2
-    face_nodes(1,3) = 1
+    face_nodes(1,2) = 3
+    face_nodes(2,2) = 2
+    face_nodes(1,3) = 2
+    face_nodes(2,3) = 1
 
     ! 1D initial conditions
     ! tnew(:,1:2) = 1.0 ! only correct for 1D?

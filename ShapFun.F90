@@ -830,15 +830,15 @@ module ShapFun
       iface=2
       lnod1=3
       lnod2=2
-      face_sn(:,2,iface)=sn_orig(:,1)
-      face_sn(:,1,iface)=sn_orig(:,2)
+      face_sn(:,1,iface)=sn_orig(:,1)
+      face_sn(:,2,iface)=sn_orig(:,2)
       face_snlx(:,1,lnod1,iface)=snlx_orig(:,1,1)
       face_snlx(:,1,lnod2,iface)=snlx_orig(:,1,2)
       ! i_s_list_no = iface
       lnod1=2
       lnod2=3
-      face_sn2(:,1,iface)=face_sn(:,2,iface)
-      face_sn2(:,2,iface)=face_sn(:,1,iface)
+      face_sn2(:,1,iface)=face_sn(:,1,iface)
+      face_sn2(:,2,iface)=face_sn(:,2,iface)
       ! face_sn2(:,lnod1,iface)=sn_orig(:,1)
       ! face_sn2(:,lnod2,iface)=sn_orig(:,2)
 
@@ -849,15 +849,15 @@ module ShapFun
       iface=3
       lnod1=2
       lnod2=1
-      face_sn(:,2,iface)=sn_orig(:,1)
-      face_sn(:,1,iface)=sn_orig(:,2)
+      face_sn(:,1,iface)=sn_orig(:,1)
+      face_sn(:,2,iface)=sn_orig(:,2)
       face_snlx(:,1,lnod1,iface)=snlx_orig(:,1,1)
       face_snlx(:,1,lnod2,iface)=snlx_orig(:,1,2)
       ! i_s_list_no = iface
       lnod1=1
       lnod2=2
-      face_sn2(:,1,iface)=face_sn(:,2,iface)
-      face_sn2(:,2,iface)=face_sn(:,1,iface)
+      face_sn2(:,1,iface)=face_sn(:,1,iface)
+      face_sn2(:,2,iface)=face_sn(:,2,iface)
       ! face_sn2(:,lnod1,iface)=sn_orig(:,1)
       ! face_sn2(:,lnod2,iface)=sn_orig(:,2)
 
