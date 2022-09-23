@@ -371,7 +371,7 @@ module transport_tri
     real :: t1, t2, t1_get_shape_funs_spec, t2_get_shape_funs_spec
     real :: t1_tri_ele_info2, t2_tri_ele_info2, time_tri_ele_info2
     real :: t1_tri_det_nlx, t2_tri_det_nlx, time_tri_det_nlx
-    real :: t1_det_snlx_all, t2_det_snlx_all, time_det_snlx_all
+    real :: t1_det_snlx_all, t2_det_snlx_all, time_det_snlx_all,face_nodes(2,3)
 
     character(10) :: start, finish
     logical:: with_time_slab, D3
@@ -408,7 +408,7 @@ module transport_tri
     allocate(nlx_lxx(ngi,ndim,nloc), nlxx(ngi,nloc), nlx_nod(nloc,ndim,nloc))
     allocate(weight(ngi), detwei(ngi), sdetwei(sngi))
     allocate( face_ele2(nface))!, face_ele(nface,totele),face_list_no( nface, totele))
-    allocate(sn(sngi,nloc),sn2(sngi,snloc),snlx(sngi,sndim,nloc))!,sweight(sngi))
+    allocate(sn(sngi,snloc),sn2(sngi,snloc),snlx(sngi,sndim,nloc))!,sweight(sngi))
     allocate(SN_orig(sngi,snloc),SNLX_orig(sngi,sndim,snloc), s_cont(sngi,ndim) )
     allocate(u_loc(ndim,nloc), u_loc2(ndim,nloc), ugi(ngi,ndim), u_ele(ndim,nloc,totele))
     allocate(xsgi(sngi,ndim), usgi(sngi,ndim), usgi2(sngi,ndim), income(sngi), snorm(sngi,ndim), norm(ndim))
@@ -416,7 +416,7 @@ module transport_tri
     allocate(tnew_nonlin_loc(nloc))
     allocate(t_bc(nloc,totele), u_bc(ndim,nloc,totele))
     allocate(tnew_gi(ngi), tnew_xgi(ngi,ndim), tnew_sgi(sngi), tnew_sgi2(sngi), told_gi(ngi))
-    allocate(face_sn(sngi,nloc,nface), face_sn2(sngi,snloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
+    allocate(face_sn(sngi,snloc,nface), face_sn2(sngi,snloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
     allocate(x_loc(ndim,nloc))
     allocate(mass_ele(nloc,nloc), mat_loc_inv(nloc,nloc), rhs_loc(nloc), ml_ele(nloc))
     allocate(rhs_jac(nloc), mass_t_new(nloc), inv_jac(ngi, ndim, ndim ) )
@@ -439,6 +439,12 @@ module transport_tri
 
     u_bc(:,:,:)=0.0 ! this contains the boundary conditions on velocity just outside the domain
     tnew(:,:) = 0.0
+    face_nodes(2,1) = 1
+    face_nodes(1,1) = 3
+    face_nodes(2,2) = 3
+    face_nodes(1,2) = 2
+    face_nodes(2,3) = 2
+    face_nodes(1,3) = 1
 
     ! 1D initial conditions
     ! tnew(:,1:2) = 1.0 ! only correct for 1D?
@@ -473,6 +479,8 @@ module transport_tri
     call get_shape_funs_spec(n, nlx, nlx_lxx, nlxx, weight, nlx_nod, &
               nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn, face_sn2, face_snlx, &
               sweight, npoly, ele_type, totele)!, face_list_no)
+
+
     ! call CPU_TIME(t2_get_shape_funs_spec)
 
     ! time_tri_ele_info2 = 0.0
@@ -611,15 +619,13 @@ module transport_tri
             snlx = face_snlx(:,:,:,iface)
             sn2  = face_sn2(:,:,iface)
 
-
-
             usgi=0.0; usgi2=0.0; xsgi=0.0; tnew_sgi=0.0; tnew_sgi2=0.0
-            do iloc=1,nloc ! use all of the nodes not just the surface nodes.
+            do iloc=1,snloc ! use all of the nodes not just the surface nodes.
               do idim=1,ndim
-                usgi(:,idim)  = usgi(:,idim)  + sn(:,iloc)*u_loc(idim,iloc)
-                xsgi(:,idim)  = xsgi(:,idim)  + sn(:,iloc)*x_loc(idim,iloc)
+                usgi(:,idim)  = usgi(:,idim)  + sn(:,iloc)*u_loc(idim,face_nodes(iloc,iface))
+                xsgi(:,idim)  = xsgi(:,idim)  + sn(:,iloc)*x_loc(idim,face_nodes(iloc,iface))
               end do
-              tnew_sgi  = tnew_sgi(:)  + sn(:,iloc)*tnew_loc(iloc)
+              tnew_sgi  = tnew_sgi(:)  + sn(:,iloc)*tnew_loc(face_nodes(iloc,iface))
             end do
 
             do iloc=1,snloc ! use all of the nodes not just the surface nodes.
@@ -656,9 +662,9 @@ module transport_tri
                           *( (1.-income(:))* usgi(:,idim)*tnew_sgi(:) + income(:)*usgi2(:,idim)*tnew_sgi2(:) )
             end do
 
-            do iloc=1,nloc
+            do iloc=1,snloc
               do idim=1,ndim
-                rhs_loc(iloc)  = rhs_loc(iloc)  - sum( sn(:,iloc)*s_cont(:,idim) )
+                rhs_loc(face_nodes(iloc,iface))=rhs_loc(face_nodes(iloc,iface))-sum(sn(:,iloc)*s_cont(:,idim))
               end do
             end do
           end do ! iface

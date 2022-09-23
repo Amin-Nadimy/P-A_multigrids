@@ -662,7 +662,7 @@ module ShapFun
       ! of the non-zeros of the nabouting element.
       real, intent(inout) :: n(ngi,nloc), nlx(ngi,ndim,nloc), nlxx(ngi,nloc), nlx_lxx(ngi,ndim,nloc), weight(ngi)
       real, intent(inout) :: nlx_nod(nloc,ndim,nloc)
-      real, intent(inout) :: face_sn(sngi,nloc,nface), face_sn2(sngi,snloc,n_s_list_no)
+      real, intent(inout) :: face_sn(sngi,snloc,nface), face_sn2(sngi,snloc,n_s_list_no)
       real, intent(inout) :: face_snlx(sngi,ndim,nloc,nface)
       ! npoly=order of polynomial in Cartesian space; ele_type=type of element including order of poly.
       integer, intent(in) :: npoly,ele_type
@@ -704,7 +704,7 @@ module ShapFun
       ! face_list_no(iface, ele) returns the possible origantation number which defines the numbering
       ! of the non-zeros of the nabouting element.
       real, intent(inout) :: n(ngi,nloc), nlx(ngi,ndim,nloc), weight(ngi)
-      real, intent(inout) :: face_sn(sngi,nloc,nface), face_sn2(sngi,snloc,n_s_list_no)
+      real, intent(inout) :: face_sn(sngi,snloc,nface), face_sn2(sngi,snloc,n_s_list_no)
       real, intent(inout) :: face_snlx(sngi,ndim,nloc,nface)
       ! npoly=order of polynomial in Cartesian space; ele_type=type of element including order of poly.
       integer, intent(in) :: npoly, ele_type
@@ -782,7 +782,7 @@ module ShapFun
       implicit none
       integer, intent(in) :: nface, sngi, snloc, nloc, ndim, sndim, totele, n_s_list_no
       real, intent(in) :: sn_orig(sngi,snloc), snlx_orig(sngi,sndim,snloc)
-      real, intent(out) :: face_sn(sngi,nloc,nface), face_snlx(sngi,sndim,nloc,nface), face_sn2(sngi,snloc,n_s_list_no)
+      real, intent(out) :: face_sn(sngi,snloc,nface), face_snlx(sngi,sndim,nloc,nface), face_sn2(sngi,snloc,n_s_list_no)
       ! integer, intent(out) :: face_list_no(nface,totele)
       ! local variables...
       integer iface,lnod1,lnod2,i_s_list_no
@@ -810,15 +810,15 @@ module ShapFun
       iface=1
       lnod1=1
       lnod2=3
-      face_sn(:,lnod1,iface)=sn_orig(:,1)
-      face_sn(:,lnod2,iface)=sn_orig(:,2)
+      face_sn(:,1,iface)=sn_orig(:,1)
+      face_sn(:,2,iface)=sn_orig(:,2)
       face_snlx(:,1,lnod1,iface)=snlx_orig(:,1,1)
       face_snlx(:,1,lnod2,iface)=snlx_orig(:,1,2)
       ! i_s_list_no = iface
       lnod1=3
       lnod2=1
-      face_sn2(:,1,iface)=face_sn(:,lnod2,iface)
-      face_sn2(:,2,iface)=face_sn(:,lnod1,iface)
+      face_sn2(:,1,iface)=face_sn(:,1,iface)
+      face_sn2(:,2,iface)=face_sn(:,2,iface)
       ! face_sn2(:,lnod1,iface)=sn_orig(:,1)
       ! face_sn2(:,lnod2,iface)=sn_orig(:,2)
 
@@ -830,15 +830,15 @@ module ShapFun
       iface=2
       lnod1=3
       lnod2=2
-      face_sn(:,lnod1,iface)=sn_orig(:,1)
-      face_sn(:,lnod2,iface)=sn_orig(:,2)
+      face_sn(:,2,iface)=sn_orig(:,1)
+      face_sn(:,1,iface)=sn_orig(:,2)
       face_snlx(:,1,lnod1,iface)=snlx_orig(:,1,1)
       face_snlx(:,1,lnod2,iface)=snlx_orig(:,1,2)
       ! i_s_list_no = iface
       lnod1=2
       lnod2=3
-      face_sn2(:,1,iface)=face_sn(:,lnod2,iface)
-      face_sn2(:,2,iface)=face_sn(:,lnod1,iface)
+      face_sn2(:,1,iface)=face_sn(:,2,iface)
+      face_sn2(:,2,iface)=face_sn(:,1,iface)
       ! face_sn2(:,lnod1,iface)=sn_orig(:,1)
       ! face_sn2(:,lnod2,iface)=sn_orig(:,2)
 
@@ -849,15 +849,15 @@ module ShapFun
       iface=3
       lnod1=2
       lnod2=1
-      face_sn(:,lnod1,iface)=sn_orig(:,1)
-      face_sn(:,lnod2,iface)=sn_orig(:,2)
+      face_sn(:,2,iface)=sn_orig(:,1)
+      face_sn(:,1,iface)=sn_orig(:,2)
       face_snlx(:,1,lnod1,iface)=snlx_orig(:,1,1)
       face_snlx(:,1,lnod2,iface)=snlx_orig(:,1,2)
       ! i_s_list_no = iface
       lnod1=1
       lnod2=2
-      face_sn2(:,1,iface)=face_sn(:,lnod2,iface)
-      face_sn2(:,2,iface)=face_sn(:,lnod1,iface)
+      face_sn2(:,1,iface)=face_sn(:,2,iface)
+      face_sn2(:,2,iface)=face_sn(:,1,iface)
       ! face_sn2(:,lnod1,iface)=sn_orig(:,1)
       ! face_sn2(:,lnod2,iface)=sn_orig(:,2)
 
