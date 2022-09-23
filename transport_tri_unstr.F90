@@ -80,7 +80,7 @@ module transport_tri_unstr
     ! call ReadMSH(meshList,'./gmsh_100.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./4_elements.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./1_un_ele.msh',ierr, totnodes)
-    call ReadMSH(meshList,'./2_unele_2split_test.msh',ierr, totnodes)
+    call ReadMSH(meshList,'/Mesh_files/gmsh_100.msh',ierr, totnodes)
 
     call CPU_TIME(t2_ReadMSH)
     time_ReadMSH = t2_ReadMSH - t1_ReadMSH
@@ -382,6 +382,7 @@ module transport_tri_unstr
 
       call FINDInv(glob_lhs, inv_lhs, nloc*totele, errorflag)
       tnew_nonlin2 = matmul(inv_lhs,rhs_array )
+            ! D x^{i+1} = D x^i - A x^i +s Jacobi
       call array_to_told(totele, nloc, tnew_nonlin2, tnew_nonlin)
       tnew=tnew_nonlin
       end do ! do its=1,nits
@@ -472,7 +473,11 @@ module transport_tri_unstr
     ! call ReadMSH(meshList,'./4_elements.msh',ierr, totnodes)
     print*, 'starting time for reading the .msh file'
     call CPU_TIME(t1_ReadMSH)
-    call ReadMSH(meshList,'./untitled2048.msh',ierr, totnodes)
+    ! call ReadMSH(meshList,'./untitled2048.msh',ierr, totnodes)
+    call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/Fully_unstr.msh',ierr, totnodes)
+    ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/3_split.msh',ierr, totnodes)
+
+
     ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/Fully_unstr.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
 
@@ -522,7 +527,7 @@ module transport_tri_unstr
     u_bc(:,:,:)=u_ele(:,:,:) ! this contains the boundary conditions on velocity just outside the domain
     ! dt = CFL/((u_ele(1,1,1)/dx)+(u_ele(2,1,1)/dy))
     dt = CFL*dx
-    ntime= time/dt
+    ntime= 2!time/dt
     print*, 'totele = ',totele
     print*, 'ntime = ', ntime
 
@@ -583,10 +588,10 @@ module transport_tri_unstr
     do itime=1,ntime
 
       ! generating VTK files
-      if ( vtk_io <= itime  ) then
-        call get_vtk(x_all, tnew, totele, nloc, itime,ndim, cell_type)
-        vtk_io = vtk_io + vtk_interval
-      end if
+      ! if ( vtk_io <= itime  ) then
+      !   call get_vtk(x_all, tnew, totele, nloc, itime,ndim, cell_type)
+      !   vtk_io = vtk_io + vtk_interval
+      ! end if
 
       told = tnew ! prepare for next time step
       tnew_nonlin = tnew
@@ -624,38 +629,38 @@ module transport_tri_unstr
             end do
             tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
             told_gi(gi)=sum(n(gi,:)*told_loc(:))
-            rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
-            ! a_starif(ele_type < is_triangle_or_tet) then
-            ! eq 4
-            ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
-            a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
-            a_star(gi,:) = a_coef * tnew_xgi(gi,:)
-            ! eq 14
+            ! rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
+            ! ! a_starif(ele_type < is_triangle_or_tet) then
+            ! ! eq 4
+            ! ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
+            ! a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
+            ! a_star(gi,:) = a_coef * tnew_xgi(gi,:)
+            ! ! eq 14
+            ! ! p_star(gi) =0.0
+            ! ! do iloc=1,nloc
+            ! !    p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*nx(gi,:,iloc) ))  )
+            ! ! end do
+            ! ! p_star(gi) = 0.25/max(toler, p_star(gi))
+            ! ! eq 23 for P*
             ! p_star(gi) =0.0
-            ! do iloc=1,nloc
-            !    p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*nx(gi,:,iloc) ))  )
+            ! do idim=1,ndim
+            !   do iloc=1,nloc
+            !     p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
+            !   end do
             ! end do
-            ! p_star(gi) = 0.25/max(toler, p_star(gi))
-            ! eq 23 for P*
-            p_star(gi) =0.0
-            do idim=1,ndim
-              do iloc=1,nloc
-                p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
-              end do
-            end do
-            p_star(gi) = min(1/toler ,0.25/p_star(gi) )
-            ! eq 18
-            diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
+            ! p_star(gi) = min(1/toler ,0.25/p_star(gi) )
+            ! ! eq 18
+            ! diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
           end do
           rhs_loc=0.0 ! the local to element rhs vector.
           mass_ele=0.0 ! initialize mass matric to be zero.
-          stab=0.0
+          ! stab=0.0
           do iloc=1,nloc
             !inod = glob_no(iloc,ele)
             do jloc=1,nloc
               !jnod = glob_no(ele,jloc)
               do gi=1,ngi
-                stab(iloc,jloc) = stab(iloc,jloc) + sum(diff_coe(gi)* nx(gi,:,jloc)* nx(gi,:,iloc))* detwei(gi)
+                ! stab(iloc,jloc) = stab(iloc,jloc) + sum(diff_coe(gi)* nx(gi,:,jloc)* nx(gi,:,iloc))* detwei(gi)
                 mass_ele(iloc,jloc) = mass_ele(iloc,jloc) + n(gi,iloc)*n(gi,jloc)*detwei(gi)
               end do ! quadrature
             end do ! ijloc
@@ -743,7 +748,7 @@ module transport_tri_unstr
           end do ! iface
 
           ! if (with_stab) then
-            mat_loc= mass_ele + dt*stab
+            mat_loc= mass_ele !+ dt*stab
           ! else
           !   mat_loc= mass_ele
           ! end if
@@ -767,7 +772,7 @@ module transport_tri_unstr
           ! else ! iterative solvervtk_io=vtk_interval
             do iloc=1,nloc
               rhs_jac(iloc)= sum( mass_ele(iloc,:) * told_loc(:) ) + dt*rhs_loc(iloc)
-                mat_diag_approx(iloc) = ml_ele(iloc) + dt * stab(iloc,iloc)
+                mat_diag_approx(iloc) = ml_ele(iloc) !+ dt * stab(iloc,iloc)
             end do
 
             tnew_nonlin_loc(:) = tnew_nonlin(:,ele)

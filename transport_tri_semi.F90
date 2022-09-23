@@ -45,7 +45,7 @@ module transport_tri_semi
 
       real :: sarea, volume, dt, L
       real :: length_x, length_y, theta
-      real :: t1, t2, t1_get_shape_funs_spec, t2_get_shape_funs_spec
+      real :: t1, t2, t3,t4,surface_time, t1_get_shape_funs_spec, t2_get_shape_funs_spec
       real :: t1_tri_det_nlx, t2_tri_det_nlx, time_tri_det_nlx, i_tri_det_nlx
       real :: t1_det_snlx_all, t2_det_snlx_all, time_det_snlx_all, i_det_snlx_all
       real :: t1_ReadMSH, t2_ReadMSH, time_ReadMSH
@@ -96,8 +96,12 @@ module transport_tri_semi
       print*, '|       Reading the .msh file     |'
       call CPU_TIME(t1_ReadMSH)
       ! call ReadMSH(meshList,'./1_unele_test.msh',ierr, totnodes)
-      ! call ReadMSH(meshList,'./2_unele_test.msh',ierr, totnodes)
-      call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/4_split.msh',ierr, totnodes)
+      call ReadMSH(meshList,'./Mesh_files/2_unele_test.msh',ierr, totnodes)
+
+      ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/4_split.msh',ierr, totnodes) ! it is for a square domain
+      ! call ReadMSH(meshList,'./Mesh_files/multigrid_meshes/circle/330_un_ele/Circulo_1_splt.msh',ierr, totnodes) ! it is for a circle doain
+
+
       ! call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
       ! call ReadMSH(meshList,'./semi_structured_mesh.msh',ierr, totnodes)
       ! call ReadMSH(meshList,'./P_structured_mesh',ierr, totnodes)
@@ -108,10 +112,10 @@ module transport_tri_semi
       call CPU_TIME(t2_ReadMSH)
       time_ReadMSH = t2_ReadMSH - t1_ReadMSH
       print*, '|   Time for reading .msh file    |', time_ReadMSH
-
       totele_unst = size(meshList)
+
       theta = 1.
-      n_split = 1
+      n_split = 2
 
       if ( multi_levels > n_split ) then
         print*, 'error:: The number of multi_levels is higher than n_split'
@@ -122,15 +126,13 @@ module transport_tri_semi
       totele_str = 4**n_split
       solve_for = 'Tracer'
 
-
-
       sndim = ndim-1 ! dimensions of the surface element coordinates.
       mloc=1
       ele_type = 3
       vtk_io=vtk_interval
       dt = CFL*dx
       ! dt = CFL*dx/u_x + CFL*dy/u_y
-      ntime = 3!time/dt
+      ntime = 1!time/dt
       k = 1. !diffusion coeficient for the diffusion term, m^2/s for water diffuses into air
       with_time_slab =.false.
       D3=.false.
@@ -236,10 +238,12 @@ module transport_tri_semi
           call getNeigDataMesh(meshlist, un_ele, iface, Npos, Nside, lnodes2)
           call get_d_center(MeshList,un_ele, Npos, iface, nface, nloc, n_split,ele_info(1)%str_neig)
         end do
-        if ( meshList(un_ele)%region_id == 12 ) then
-          tracer(1)%tnew(:,:,un_ele) = 0.
+        if ( meshList(un_ele)%region_id == 1 ) then
+          tracer(1)%tnew(:,:,un_ele) = 1.
         end if
       end do
+
+
 
 
       ! call TRIQUAold(L1, L2, L3, L4, WEIGHT, D3,NGI)
@@ -278,14 +282,14 @@ module transport_tri_semi
 
       print*, '|   n_split =', n_split
       print*, '|   multigrid levels =', multi_levels
-      print*, '|   totele un_ele & totele',  totele_unst, totele_str * totele_unst
+      print*, '|   totele_unst, totele_str, totele',  totele_unst, totele_str, totele_str * totele_unst
       print*, '|   ntime = ', ntime
       print*, '|   dt    = ', dt
       print*, '---------------------------------------------------------'
       call CPU_TIME(t1)
 
       do itime=1,ntime
-        ! generating VTK files
+        !--------------------------- generating VTK files ------------------------
         if ( vtk_io <= itime ) then
           if ( itime==ntime ) then
             call get_error
@@ -298,9 +302,12 @@ module transport_tri_semi
           ! call get_vtk(x_all_str, tnew, totele_str*totele_unst, nloc, itime,ndim, cell_type)
           vtk_io = vtk_io + vtk_interval
         end if
+        !--------------------------- END generating VTK files ------------------------
+
 
         tracer(1)%told = tracer(1)%tnew
         tnew_nonlin = tracer(1)%tnew
+        surface_time = 0.0
         do multigrid=1,n_multigrid
 
 
@@ -333,12 +340,12 @@ module transport_tri_semi
           tnew_nonlin = tracer(ilevel)%tnew
           ! tracer(ilevel)%tnew = 0.0
           !
-          do i=1,1000
+          do i=1,15
             call smoother
 
             call get_convergence
             if ( convergence <= 1e-5 ) then
-              ! print*, 'convergence number is =', i
+              print*, 'convergence number is =', i
               exit
             end if
           end do
@@ -366,8 +373,10 @@ module transport_tri_semi
       end do ! do itime=1,ntime
 
       call CPU_TIME(t2)
+
       print*, '----------------------------------------------------------'
-      print*, '|        cpu_time for time_loop = ', t2-t1, '     |'
+      print*, '|        cpu_time for surf_time = ', surface_time, surface_time/(t2-t1), '|'
+      print*, '|        cpu_time for time_loop = ', t2-t1,                             '|'
       print*, '----------------------------------------------------------'
 
 
@@ -595,6 +604,8 @@ module transport_tri_semi
               diff_surf=0.0
               my_diff_surf =0.0
               Neig_diff_surf =0.0
+
+              call CPU_TIME(t3)
               do iface = 1,nface
                 ele22 => ele_info(ilevel)%str_neig(iface,str_ele)!face_ele( iface, ele) ! if ele22 is 0 assume on boundary
                 i_got_boundary = (sign(1, -ele22) + 1 )/2
@@ -619,6 +630,7 @@ module transport_tri_semi
                 else
                   sn2  = face_sn2_str(:,:,iface)
                 end if ! end if ele22=0
+
 
                 ! ###################################################################################
                  if ( i_got_boundary < 1e-1 ) then
@@ -655,7 +667,7 @@ module transport_tri_semi
                 do iloc=1,nloc
                   do idim=1,ndim
                     flux_ele_new(iloc)  = flux_ele_new(iloc)  + sum( sn(:,iloc)*s_cont(:,idim) )
-                    flux_ele_old(iloc)  = flux_ele_old(iloc)  + sum( sn(:,iloc)*s_cont(:,idim) )
+                    flux_ele_old(iloc)  = flux_ele_old(iloc)  + sum( sn(:,iloc)*s_cont_old(:,idim) )
                   end do
                 end do
 
@@ -664,6 +676,8 @@ module transport_tri_semi
                                       nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
                 call get_diff_surf_stencl
               end do ! iface
+              call CPU_TIME(t4)
+              surface_time = surface_time + t4-t3
 
               !################################# solve the system ########################################
               tnew_nonlin_loc => tnew_nonlin(:,str_ele, un_ele)
@@ -758,6 +772,7 @@ module transport_tri_semi
             diff_surf=0.0
             my_diff_surf =0.0
             Neig_diff_surf =0.0
+            call CPU_TIME(t3)
             do iface = 1,nface
               ele22 => ele_info(ilevel)%str_neig(iface,str_ele)!face_ele( iface, ele) ! if ele22 is 0 assume on boundary
               i_got_boundary = (sign(1, -ele22) + 1 )/2
@@ -818,7 +833,7 @@ module transport_tri_semi
               do iloc=1,nloc
                 do idim=1,ndim
                   flux_ele_new(iloc)  = flux_ele_new(iloc)  + sum( sn(:,iloc)*s_cont(:,idim) )
-                  flux_ele_old(iloc)  = flux_ele_old(iloc)  + sum( sn(:,iloc)*s_cont(:,idim) )
+                  flux_ele_old(iloc)  = flux_ele_old(iloc)  + sum( sn(:,iloc)*s_cont_old(:,idim) )
                 end do
               end do
 
@@ -827,6 +842,8 @@ module transport_tri_semi
                                     nloc, sdetwei, tnew_sgi,tnew_sgi2, diff_surf, delta_x,sn,my_diff_surf,neig_diff_surf)
               call get_diff_surf_stencl
             end do ! iface
+            call CPU_TIME(t4)
+            surface_time = surface_time + t4-t3
 
             !################################# solve the system ########################################
             tnew_nonlin_loc => tnew_nonlin(:,str_ele, un_ele)
@@ -945,7 +962,7 @@ module transport_tri_semi
           ! call ReadMSH(meshList,'./1_unele_test.msh',ierr, totnodes)
           ! call ReadMSH(meshList,'./2_unele_test.msh',ierr, totnodes)
           ! call ReadMSH(meshList,'./4_elements.msh',ierr, totnodes)
-          call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
+          call ReadMSH(meshList,'./Mesh_files/untitled8.msh',ierr, totnodes)
           call CPU_TIME(t2_ReadMSH)
           time_ReadMSH = t2_ReadMSH - t1_ReadMSH
           print*, 'finished reading .msh file'
@@ -1042,12 +1059,12 @@ module transport_tri_semi
           call make_sparse_matrix_flux_semi(sparse_lhs,meshList,n_split,totele_unst,totele_str,nloc,nface,str_neig)
           call make_sparse_matrix_flux_semi(sparse_flux,meshList,n_split,totele_unst,totele_str,nloc,nface,str_neig)
           call get_shape_funs_spec_ustr(n, nlx, nlx_lxx, nlxx, sn_orig, weight, nlx_nod, &
-                      nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn, face_sn2, face_snlx, &
-                      sweight, npoly, ele_type, totele_unst, face_list_no )
+          nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn, face_sn2, face_snlx, &
+          sweight, npoly, ele_type, totele_unst, face_list_no )
 
           call get_shape_funs_spec(n, nlx, nlx_lxx, nlxx, weight, nlx_nod, &
-                    nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn_str, face_sn2_str, face_snlx_str, &
-                    sweight_str, npoly, ele_type, totele_str)!, face_list_no)
+          nloc, snloc, sngi, ngi, ndim, nface,n_s_list_no, face_sn_str, face_sn2_str, face_snlx_str, &
+          sweight_str, npoly, ele_type, totele_str)!, face_list_no)
 
           i=1 ! saving x_all structured triangles to be used for VTK generation
           do un_ele=1,totele_unst
@@ -1073,17 +1090,17 @@ module transport_tri_semi
             tnew_nonlin = tnew
             do its=1,nits
               do solver_its=1,nsolver_its ! jacobi iterations...
-              tnew = tnew_nonlin ! for non-linearity
-              call update_overlaps3(meshlist, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
-              sparse_mass%val=0.
-              sparse_lhs%val=0.
-              sparse_flux%val=0.
+                tnew = tnew_nonlin ! for non-linearity
+                call update_overlaps3(meshlist, tnew, told, t_bc, n_split, nface, totele_unst, nloc, str_neig)
+                sparse_mass%val=0.
+                sparse_lhs%val=0.
+                sparse_flux%val=0.
 
-              do un_ele=1,totele_unst
-                do str_ele=1,totele_str
-                  call get_str_info(n_split, str_ele, irow, ipos, orientation)
-                  call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
-                  call tri_det_nlx( x_loc, n, nlx, nx, detwei, weight, ndim, nloc, ngi, inv_jac )
+                do un_ele=1,totele_unst
+                  do str_ele=1,totele_str
+                    call get_str_info(n_split, str_ele, irow, ipos, orientation)
+                    call get_splitting(meshList(un_ele)%X, n_split, str_ele, x_loc)
+                    call tri_det_nlx( x_loc, n, nlx, nx, detwei, weight, ndim, nloc, ngi, inv_jac )
 
                     !volume=sum(detwei)
                     u_loc = meshList(un_ele)%u_ele(:,:,str_ele) ! this is the
@@ -1098,22 +1115,22 @@ module transport_tri_semi
                       tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
                       told_gi(gi)=sum(n(gi,:)*told_loc(:))
                       ! tnew_nonlin_gi(gi) = sum(n(gi,:)*tnew_nonlin_loc(:))
-                      rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
-                      ! a_starif(ele_type < is_triangle_or_tet) then
-                      ! eq 4
-                      ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
-                      a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
-                      a_star(gi,:) = a_coef * tnew_xgi(gi,:)
-
-                      p_star(gi) =0.0
-                      do idim=1,ndim
-                        do iloc=1,nloc
-                          p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
-                        end do
-                      end do
-                      p_star(gi) = min(1/toler ,0.25/p_star(gi) )
-                      ! eq 18
-                      diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
+                    !   rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
+                    !   ! a_starif(ele_type < is_triangle_or_tet) then
+                    !   ! eq 4
+                    !   ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
+                    !   a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
+                    !   a_star(gi,:) = a_coef * tnew_xgi(gi,:)
+                    !
+                    !   p_star(gi) =0.0
+                    !   do idim=1,ndim
+                    !     do iloc=1,nloc
+                    !       p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
+                    !     end do
+                    !   end do
+                    !   p_star(gi) = min(1/toler ,0.25/p_star(gi) )
+                    !   ! eq 18
+                    !   diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
                     end do
 
                     !#################### cal M and K ##################################
@@ -1164,28 +1181,28 @@ module transport_tri_semi
 
                       sn2=0
                       if ( ele22==0 ) then
-                            if ( iface==1 ) then
-                              sp = ipos/2+1 ! position of ele along the un_iface
-                              mface = 1 ! un_iface number which str_ele is located on
-                            elseif ( iface==2 ) then
-                              sp = irow
-                              mface = 3
-                            elseif (iface==3 ) then
-                              sp = irow
-                              mface = 2
-                            end if
-                            call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
+                        if ( iface==1 ) then
+                          sp = ipos/2+1 ! position of ele along the un_iface
+                          mface = 1 ! un_iface number which str_ele is located on
+                        elseif ( iface==2 ) then
+                          sp = irow
+                          mface = 3
+                        elseif (iface==3 ) then
+                          sp = irow
+                          mface = 2
+                        end if
+                        call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
                       else if ( ele22 /= 0 ) then
                         sn2  = face_sn2_str(:,:,iface)
                       end if ! end if ele22=0
 
 
                       tnew_loc2(:)= tnew(:,ele2, un_ele) * (1.0-r_got_boundary) &
-                                  + meshlist(un_ele)%t_overlap( (sp)*nloc-2:(sp)*nloc, mface ) * r_got_boundary
+                      + meshlist(un_ele)%t_overlap( (sp)*nloc-2:(sp)*nloc, mface ) * r_got_boundary
 
                       u_loc2(:,:)= meshList(un_ele)%u_ele(:,:,ele2)* (1.0-r_got_boundary) &
-                                  + meshlist(un_ele)%u_overlap(:, sp*nloc-2:sp*nloc, mface ) * r_got_boundary
-                                  ! 2nd section of u_overlap should refer to 3 ilocs from the un_ele u_bc which can be identified based on irow
+                      + meshlist(un_ele)%u_overlap(:, sp*nloc-2:sp*nloc, mface ) * r_got_boundary
+                      ! 2nd section of u_overlap should refer to 3 ilocs from the un_ele u_bc which can be identified based on irow
 
                       usgi=0.0; usgi2=0.0; xsgi=0.0; tnew_sgi=0.0; tnew_sgi2=0.0
                       do iloc=1,nloc ! use all of the nodes not just the surface nodes.
@@ -1202,7 +1219,7 @@ module transport_tri_semi
 
                       ! this is the approximate normal direction...
                       do idim=1,ndim
-                         norm(idim) = sum(xsgi(:,idim))/real(sngi) - sum(x_loc(idim,:))/real(nloc)
+                        norm(idim) = sum(xsgi(:,idim))/real(sngi) - sum(x_loc(idim,:))/real(nloc)
                       end do
 
                       call det_snlx_all( nloc, sngi, sndim, ndim, x_loc, sn, snlx, sweight, sdetwei, sarea, snorm, norm )
@@ -1272,42 +1289,42 @@ module transport_tri_semi
                             !                                                   *((1.-income(:))*sn(:,jloc)*usgi(:,idim) &
                             !                                                   +     income(:)*sn2(:,jloc)*usgi2(:,idim)))
                             flux_ele = flux_ele +sum( snorm(:,idim)*sdetwei(:)*sn(:,iloc) &
-                                                *((1.-income(:))*sn(:,jloc)*usgi(:,idim) &
-                                                +     income(:)*sn2(:,jloc)*usgi2(:,idim)))
+                            *((1.-income(:))*sn(:,jloc)*usgi(:,idim) &
+                            +     income(:)*sn2(:,jloc)*usgi2(:,idim)))
                           end do ! idim
                           call add_to_CSR_flux(sparse_flux, g_iloc, g_jloc,  flux_ele)
                         end do ! jloc
                       end do ! iloc
                     end do ! iface
 
-                  !######################## Solver ################################
-                  tnew_nonlin_loc(:) = tnew_nonlin(:,str_ele, un_ele)
+                    !######################## Solver ################################
+                    tnew_nonlin_loc(:) = tnew_nonlin(:,str_ele, un_ele)
 
-                  do iloc=1,nloc
-                    tnew_nonlin_loc(iloc) = tnew_nonlin_loc(iloc) + 1. * (sum(mass_ele2(iloc,:)*told_loc(:)) &
-                                                      -(sum(mass_ele2(iloc,:)*tnew_nonlin_loc(:))-stiff_ele2(iloc)&
-                                                      + flux_ele2(iloc)))
-                  end do
+                    do iloc=1,nloc
+                      tnew_nonlin_loc(iloc) = tnew_nonlin_loc(iloc) + 1. * (sum(mass_ele2(iloc,:)*told_loc(:)) &
+                      -(sum(mass_ele2(iloc,:)*tnew_nonlin_loc(:))-stiff_ele2(iloc)&
+                      + flux_ele2(iloc)))
+                    end do
 
-                  tnew_nonlin(:,str_ele, un_ele) = tnew_nonlin_loc(:)
+                    tnew_nonlin(:,str_ele, un_ele) = tnew_nonlin_loc(:)
                     !#############################################################
 
-                end do ! end do totele_str
-              end do ! end totele_unst
-              ! sparse_lhs%val = sparse_lhs%val + sparse_flux%val
-              ! call gen_global_matrix(totele_str*totele_unst, nloc, sparse_lhs, glob_lhs)
-              ! call told_to_array_semi(totele_str, totele_unst, nloc, told, glob_told_array)
-              ! call csr_mul_array(sparse_mass, glob_told_array, rhs_array)
-              ! tnew_nonlin2=0.0
-              ! do solver_its=1,nsolver_its
-              !     tnew_nonlin2 = tnew_nonlin2 + omega * (rhs_array - matmul(glob_lhs, tnew_nonlin2))
-              ! end do
+                  end do ! end do totele_str
+                end do ! end totele_unst
+                ! sparse_lhs%val = sparse_lhs%val + sparse_flux%val
+                ! call gen_global_matrix(totele_str*totele_unst, nloc, sparse_lhs, glob_lhs)
+                ! call told_to_array_semi(totele_str, totele_unst, nloc, told, glob_told_array)
+                ! call csr_mul_array(sparse_mass, glob_told_array, rhs_array)
+                ! tnew_nonlin2=0.0
+                ! do solver_its=1,nsolver_its
+                !     tnew_nonlin2 = tnew_nonlin2 + omega * (rhs_array - matmul(glob_lhs, tnew_nonlin2))
+                ! end do
 
-              ! call FINDInv(glob_lhs, inv_lhs, nloc*totele_str*totele_unst, errorflag)
-              !  tnew_nonlin2 = matmul(inv_lhs,rhs_array )
-              ! call array_to_told_semi(totele_str, totele_unst, nloc, tnew_nonlin2, tnew_nonlin)
-              tnew=tnew_nonlin
-            end do ! Gauss
+                ! call FINDInv(glob_lhs, inv_lhs, nloc*totele_str*totele_unst, errorflag)
+                !  tnew_nonlin2 = matmul(inv_lhs,rhs_array )
+                ! call array_to_told_semi(totele_str, totele_unst, nloc, tnew_nonlin2, tnew_nonlin)
+                tnew=tnew_nonlin
+              end do ! Jacobi iteration
             end do ! do its=1,nits
             print*, 'semi_P', itime
           end do ! do itime=1,ntime
@@ -1402,7 +1419,7 @@ module transport_tri_semi
     ! call ReadMSH(meshList,'./1_unele_test.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./2_unele_test.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./4_elements.msh',ierr, totnodes)
-    call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
+    call ReadMSH(meshList,'./Mesh_files/irregular.msh',ierr, totnodes)
     call CPU_TIME(t2_ReadMSH)
     time_ReadMSH = t2_ReadMSH - t1_ReadMSH
     print*, 'finished reading .msh file'
@@ -1484,6 +1501,7 @@ module transport_tri_semi
         tnew(:,:,un_ele) = 1.
       end if
     end do
+    tnew(:,:,1) = 1.
 
     dt = CFL*dx
     ! dt = CFL*dx/u_x + CFL*dy/u_y
@@ -1552,22 +1570,22 @@ module transport_tri_semi
               end do
               tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
               told_gi(gi)=sum(n(gi,:)*told_loc(:))
-              rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
-              ! a_starif(ele_type < is_triangle_or_tet) then
-              ! eq 4
-              ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
-              a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
-              a_star(gi,:) = a_coef * tnew_xgi(gi,:)
-
-              p_star(gi) =0.0
-              do idim=1,ndim
-                do iloc=1,nloc
-                  p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
-                end do
-              end do
-              p_star(gi) = min(1/toler ,0.25/p_star(gi) )
-              ! eq 18
-              diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
+              ! rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
+              ! ! a_starif(ele_type < is_triangle_or_tet) then
+              ! ! eq 4
+              ! ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
+              ! a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
+              ! a_star(gi,:) = a_coef * tnew_xgi(gi,:)
+              !
+              ! p_star(gi) =0.0
+              ! do idim=1,ndim
+              !   do iloc=1,nloc
+              !     p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
+              !   end do
+              ! end do
+              ! p_star(gi) = min(1/toler ,0.25/p_star(gi) )
+              ! ! eq 18
+              ! diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
             end do
 
             rhs_loc=0.0 ! the local to element rhs vector.
@@ -1817,7 +1835,7 @@ module transport_tri_semi
     ! call ReadMSH(meshList,'./1_unele_test.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./2_unele_test.msh',ierr, totnodes)
     ! call ReadMSH(meshList,'./teseting_mesh.msh',ierr, totnodes)
-    call ReadMSH(meshList,'./irregular.msh',ierr, totnodes)
+    call ReadMSH(meshList,'./Mesh_files/2_unele_test.msh',ierr, totnodes)
 
 
     call CPU_TIME(t2_ReadMSH)
@@ -1893,11 +1911,12 @@ module transport_tri_semi
         end if
       end do
   ! tnew(:,7,1)=1.
+    tnew(:,:,1) = 1.
 
 
     dt = CFL*dx
     ! dt = CFL*dx/u_x + CFL*dy/u_y
-    ntime = time/dt
+    ntime = 50!time/dt
     with_time_slab =.false.
     D3=.false.
     npoly=1; ele_type= 101
@@ -1961,22 +1980,22 @@ print*, 'ntime = ', ntime
               end do
               tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
               told_gi(gi)=sum(n(gi,:)*told_loc(:))
-              rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
-              ! a_starif(ele_type < is_triangle_or_tet) then
-              ! eq 4
-              ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
-              a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
-              a_star(gi,:) = a_coef * tnew_xgi(gi,:)
-
-              p_star(gi) =0.0
-              do idim=1,ndim
-                do iloc=1,nloc
-                  p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
-                end do
-              end do
-              p_star(gi) = min(1/toler ,0.25/p_star(gi) )
-              ! eq 18
-              diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
+              ! rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
+              ! ! a_starif(ele_type < is_triangle_or_tet) then
+              ! ! eq 4
+              ! ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
+              ! a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
+              ! a_star(gi,:) = a_coef * tnew_xgi(gi,:)
+              !
+              ! p_star(gi) =0.0
+              ! do idim=1,ndim
+              !   do iloc=1,nloc
+              !     p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
+              !   end do
+              ! end do
+              ! p_star(gi) = min(1/toler ,0.25/p_star(gi) )
+              ! ! eq 18
+              ! diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
             end do
 ! if ( itime==1 .and. its==1 ) then
 !   print*, tnew_loc(:)
@@ -2035,8 +2054,8 @@ print*, 'ntime = ', ntime
                     end if
                     call get_semi_sn2_implicit(meshlist, un_ele, mface, sn_orig, sn2)
               else if ( ele22 /= 0 ) then
-                sn2  = face_sn2_str(:,:,iface)
               end if ! end if ele22=0
+              sn2  = face_sn2_str(:,:,iface)
 
               ! ########### T and u @ quadrature points ########################
               tnew_loc2(:)= tnew(:,ele2, un_ele) * (1.0-r_got_boundary) &

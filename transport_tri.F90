@@ -347,6 +347,8 @@ module transport_tri
                L1, L2, L3, L4, NLX_ALL, glob_mass, glob_lhs,glob_told_array,rhs_array,inv_lhs)
   end subroutine str_implicit
 
+
+
   ! brief> this is for transport structured trianggular elements
   ! explicit method
   Subroutine str_explicit(CFL, ndim, direct_solver, njac_its, time, nits, no_ele_row,&
@@ -388,6 +390,7 @@ module transport_tri
     real, allocatable :: mass_ele(:,:), mat_loc(:,:), mat_loc_inv(:,:), rhs_loc(:), ml_ele(:), rhs_jac(:), mass_t_new(:)
     real, allocatable :: SN_orig(:,:),SNLX_orig(:,:,:), inv_jac(:, :, : ), mat_diag_approx(:)
     real, allocatable :: a_star(:,:), p_star(:), rgi(:), diff_coe(:), told_loc(:), stab(:,:), mat_tnew(:), mass_told(:)
+    real, allocatable :: stnew_loc2(:,:)
 
     real, allocatable:: L1(:), L2(:), L3(:), L4(:)
     real, allocatable:: NLX_ALL(:,:,:)
@@ -405,7 +408,7 @@ module transport_tri
     allocate(nlx_lxx(ngi,ndim,nloc), nlxx(ngi,nloc), nlx_nod(nloc,ndim,nloc))
     allocate(weight(ngi), detwei(ngi), sdetwei(sngi))
     allocate( face_ele2(nface))!, face_ele(nface,totele),face_list_no( nface, totele))
-    allocate(sn(sngi,nloc),sn2(sngi,nloc),snlx(sngi,sndim,nloc))!,sweight(sngi))
+    allocate(sn(sngi,nloc),sn2(sngi,snloc),snlx(sngi,sndim,nloc))!,sweight(sngi))
     allocate(SN_orig(sngi,snloc),SNLX_orig(sngi,sndim,snloc), s_cont(sngi,ndim) )
     allocate(u_loc(ndim,nloc), u_loc2(ndim,nloc), ugi(ngi,ndim), u_ele(ndim,nloc,totele))
     allocate(xsgi(sngi,ndim), usgi(sngi,ndim), usgi2(sngi,ndim), income(sngi), snorm(sngi,ndim), norm(ndim))
@@ -413,12 +416,12 @@ module transport_tri
     allocate(tnew_nonlin_loc(nloc))
     allocate(t_bc(nloc,totele), u_bc(ndim,nloc,totele))
     allocate(tnew_gi(ngi), tnew_xgi(ngi,ndim), tnew_sgi(sngi), tnew_sgi2(sngi), told_gi(ngi))
-    allocate(face_sn(sngi,nloc,nface), face_sn2(sngi,nloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
+    allocate(face_sn(sngi,nloc,nface), face_sn2(sngi,snloc,n_s_list_no), face_snlx(sngi,sndim,nloc,nface) )
     allocate(x_loc(ndim,nloc))
     allocate(mass_ele(nloc,nloc), mat_loc_inv(nloc,nloc), rhs_loc(nloc), ml_ele(nloc))
     allocate(rhs_jac(nloc), mass_t_new(nloc), inv_jac(ngi, ndim, ndim ) )
     allocate(a_star(ngi,nloc), p_star(ngi), rgi(ngi), diff_coe(ngi), told_loc(nloc), stab(nloc, nloc))
-    allocate(mat_tnew(nloc), mat_diag_approx(nloc), mass_told(nloc))
+    allocate(mat_tnew(nloc), mat_diag_approx(nloc), mass_told(nloc), stnew_loc2(snloc,nface))
 
 
     allocate(L1(ngi), L2(ngi), L3(ngi), L4(ngi))
@@ -445,7 +448,7 @@ module transport_tri
 
     ! 2D initial conditions
       tnew(:,1:no_ele_row/5+1) = 1.0
-    do i=2,no_ele_col/5
+    do i=2,no_ele_col
       tnew(:,(i-1)*no_ele_row+1 : no_ele_row*i-(no_ele_row*4/5)) = 1.0
     end do
 
@@ -456,7 +459,7 @@ module transport_tri
 
     dt = CFL*dx
     ! dt = CFL/(u_x/dx+u_y/dy)
-    ntime = time/dt
+    ntime = 100!time/dt
 
 
     with_time_slab =.false.
@@ -482,11 +485,11 @@ module transport_tri
 
     do itime=1,ntime
       !generating VTK files
-      ! if ( vtk_io <= itime  ) then
-      !   call get_vtk_str_tri(tnew, totele, no_ele_row, no_ele_col, nface, &
-      !                             dx, dy, nloc, itime, ndim, cell_type)
-      !   vtk_io = vtk_io + vtk_interval
-      ! end if
+      if ( vtk_io <= itime  ) then
+        call get_vtk_str_tri(tnew, totele, no_ele_row, no_ele_col, nface, &
+                                  dx, dy, nloc, itime, ndim, cell_type)
+        vtk_io = vtk_io + vtk_interval
+      end if
 
       told = tnew ! prepare for next time step
       tnew_nonlin = tnew
@@ -533,28 +536,28 @@ module transport_tri
             end do
             tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
             told_gi(gi)=sum(n(gi,:)*told_loc(:))
-            rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
-            ! a_star
-            ! eq 4
-            ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
-            a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
-            a_star(gi,:) = a_coef * tnew_xgi(gi,:)
-            ! eq 14
+            ! rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
+            ! ! a_star
+            ! ! eq 4
+            ! ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
+            ! a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
+            ! a_star(gi,:) = a_coef * tnew_xgi(gi,:)
+            ! ! eq 14
+            ! ! p_star(gi) =0.0
+            ! ! do iloc=1,nloc
+            ! !    p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*nx(gi,:,iloc) ))  )
+            ! ! end do
+            ! ! p_star(gi) = 0.25/max(toler, p_star(gi))
+            ! ! eq 23 for P*
             ! p_star(gi) =0.0
-            ! do iloc=1,nloc
-            !    p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*nx(gi,:,iloc) ))  )
+            ! do idim=1,ndim
+            !   do iloc=1,nloc
+            !      p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
+            !   end do
             ! end do
-            ! p_star(gi) = 0.25/max(toler, p_star(gi))
-            ! eq 23 for P*
-            p_star(gi) =0.0
-            do idim=1,ndim
-              do iloc=1,nloc
-                 p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
-              end do
-            end do
-            p_star(gi) = min(1/toler ,0.25/p_star(gi) )
-            ! eq 18
-            diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
+            ! p_star(gi) = min(1/toler ,0.25/p_star(gi) )
+            ! ! eq 18
+            ! diff_coe(gi) = 0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) )
           end do
           rhs_loc=0.0 ! the local to element rhs vector.
           mass_ele=0.0 ! initialize mass matric to be zero.
@@ -589,6 +592,17 @@ module transport_tri
             ! r_got_boundary=0.0 not on boundary
 
             tnew_loc2(:)=tnew(:,ele2) * (1.0-r_got_boundary)   + t_bc(:,ele)  * r_got_boundary
+            stnew_loc2(2,1) = tnew_loc2(3)
+            stnew_loc2(1,1) = tnew_loc2(1)
+            stnew_loc2(2,2) = tnew_loc2(3)
+            stnew_loc2(1,2) = tnew_loc2(2)
+            stnew_loc2(2,3) = tnew_loc2(2)
+            stnew_loc2(1,3) = tnew_loc2(1)
+
+
+
+
+
             u_loc2(:,:)=u_ele(:,:,ele2)* (1.0-r_got_boundary)  + u_bc(:,:,ele)* r_got_boundary
 
             !Surface integral along an element
@@ -598,20 +612,23 @@ module transport_tri
             sn2  = face_sn2(:,:,iface)
 
 
+
             usgi=0.0; usgi2=0.0; xsgi=0.0; tnew_sgi=0.0; tnew_sgi2=0.0
             do iloc=1,nloc ! use all of the nodes not just the surface nodes.
               do idim=1,ndim
-
                 usgi(:,idim)  = usgi(:,idim)  + sn(:,iloc)*u_loc(idim,iloc)
-                usgi2(:,idim) = usgi2(:,idim) + sn2(:,iloc)*u_loc2(idim,iloc)
                 xsgi(:,idim)  = xsgi(:,idim)  + sn(:,iloc)*x_loc(idim,iloc)
-
               end do
               tnew_sgi  = tnew_sgi(:)  + sn(:,iloc)*tnew_loc(iloc)
-              tnew_sgi2 = tnew_sgi2(:) + sn2(:,iloc)*tnew_loc2(iloc)
             end do
-            !        usgi=0.0
-            !        usgi2=0.0
+
+            do iloc=1,snloc ! use all of the nodes not just the surface nodes.
+              do idim=1,ndim
+                usgi2(:,idim) = usgi2(:,idim) + sn2(:,iloc)*u_loc2(idim,iloc)
+              end do
+              tnew_sgi2 = tnew_sgi2(:) + sn2(:,iloc)*stnew_loc2(iloc,iface)
+            end do
+
 
             ! this is the approximate normal direction...
             do idim=1,ndim
@@ -696,18 +713,18 @@ module transport_tri
     !runing time
     call CPU_TIME(t2)
     print*, 'cpu_time for time_loop = ', t2-t1
-    ! call DATE_AND_TIME(TIME = finish)
-    ! print*, 'finishing time = ', finish, '  starting time =  ',start
-    !
-    ! print*, 'cpu_time get_shape_funs_spec = ', t2_get_shape_funs_spec - t1_get_shape_funs_spec
-    print*, 'cpu_time tri_ele_info2 = ', time_tri_ele_info2
+    ! ! call DATE_AND_TIME(TIME = finish)
+    ! ! print*, 'finishing time = ', finish, '  starting time =  ',start
+    ! !
+    ! ! print*, 'cpu_time get_shape_funs_spec = ', t2_get_shape_funs_spec - t1_get_shape_funs_spec
+    ! print*, 'cpu_time tri_ele_info2 = ', time_tri_ele_info2
+    ! ! print*, ''
+    ! !
+    ! print*, 'cpu_time tri_det_nlx = ', time_tri_det_nlx
     ! print*, ''
-    !
-    print*, 'cpu_time tri_det_nlx = ', time_tri_det_nlx
-    print*, ''
-    !
-    print*, 'cpu_time det_snlx_all = ', time_det_snlx_all
-    print*, ''
+    ! !
+    ! print*, 'cpu_time det_snlx_all = ', time_det_snlx_all
+    ! print*, ''
 
 
     ! ! OPEN(unit=10, file='1DG-FEM, test_triangle')
@@ -772,6 +789,6 @@ module transport_tri
                mass_ele, mat_loc, mat_loc_inv, rhs_loc, ml_ele, rhs_jac, mass_t_new,&
                SN_orig,SNLX_orig, inv_jac, mat_diag_approx,&
                a_star, p_star, rgi, diff_coe, told_loc, stab, mat_tnew, mass_told,&
-               L1, L2, L3, L4, NLX_ALL)
+               L1, L2, L3, L4, NLX_ALL,stnew_loc2)
   end subroutine str_explicit
 end module transport_tri

@@ -3,72 +3,72 @@ module structured_meshgen
 contains
 
   ! This subroutine generates structured rectangular mesh
-  ! subroutine ele_info(totele, nface, face_ele, no_ele_row, row, row2, &
-  !                          x_all, dx, dy, ndim, nloc, no_ele_col, col)
-  !   ! ordering the face numbers: bottom face=1, right=1, left=3 and top=4
-  !   ! row and row2 are row number associated with ele and ele2
-  !   ! no_ele_row is total number of element in each row
-  !   ! no_ele_col is total number of element in each column
-  !   ! ndim is no of dimensions
-  !   ! nloc is no of corner nodes
-  !   ! face_ele(iface, ele) = given the face no iface and element no return the element next to
-  !   ! the surface or if negative return the negative of the surface element number between element ele and face iface.
-  !
-  !   implicit none
-  !   integer, intent(in) :: no_ele_row, totele, no_ele_col, nloc, ndim, nface
-  !   integer, intent(out) :: row, row2 , col
-  !   integer:: face_ele(nface,totele), face_list_no(nface,totele), ele, iface
-  !
-  !   real, intent(in) :: dx, dy
-  !   real, intent(out) :: x_all(ndim,nloc,totele)
-  !
-  !   do ele=1,totele
-  !     row = ceiling(real(ele)/no_ele_row)
-  !     col = ele-(no_ele_row*(row-1))
-  !
-  !     ! corner node coordinates
-  !     x_all(1,1,ele) = dx*(col-1); x_all(2,1,ele) = dy*(row-1)
-  !     x_all(1,2,ele) = dx*col    ; x_all(2,2,ele) = dy*(row-1)
-  !     x_all(1,3,ele) = dx*(col-1); x_all(2,3,ele) = dy*row
-  !     x_all(1,4,ele) = dx*col    ; x_all(2,4,ele) = dy*row
-  !
-  !     ! findin neighbiuring ele and face numbers
-  !     do iface=1,nface
-  !       if (iface==1) then
-  !         face_ele(iface,ele) = ele - no_ele_row
-  !         ! face_list_no(iface,ele) = 4
-  !         ! row2 = ceiling(real(ele)/no_ele_row)
-  !         ! if (row2.EQ.1) face_list_no(iface,ele) = -1*face_list_no(iface,ele)
-  !
-  !       elseif ( iface==2 ) then
-  !         face_ele(iface,ele) = ele - 1
-  !         ! face_list_no(iface,ele) = 3
-  !         row2 = ceiling(real(face_ele(iface,ele))/no_ele_row)
-  !         if (row2.NE.row) then
-  !           face_ele(iface,ele) = -1*face_ele(iface,ele)  !It is a boundary element located at the right side of the domain
-  !           ! face_list_no(iface,ele) = -1*face_list_no(iface,ele)
-  !         end if
-  !
-  !       elseif ( iface==3 ) then
-  !         face_ele(iface,ele) = ele +1   !It is a boundary element
-  !         ! face_list_no(iface,ele) = 2
-  !         row2 = ceiling(real(face_ele(iface,ele))/no_ele_row)
-  !         if (row2.NE.row) then
-  !           face_ele(iface,ele) = -1*face_ele(iface,ele)  !It is a boundary element located at the lest side of the domain
-  !           ! face_list_no(iface,ele) = -1*face_list_no(iface,ele)
-  !         end if
-  !
-  !       elseif ( iface==4 ) then
-  !         face_ele(iface,ele) = ele + no_ele_row
-  !         ! face_list_no(iface,ele) = 1
-  !         if (face_ele(iface,ele).GT.totele) then
-  !           face_ele(iface,ele) = -1*face_ele(iface,ele)  !It is a boundary element located at the top of the domain
-  !           ! face_list_no(iface,ele) = -1*face_list_no(iface,ele)
-  !         end if
-  !       end if
-  !     end do
-  !   end do
-  ! end subroutine ele_info
+  subroutine ele_info(totele, nface, face_ele, no_ele_row, row, row2, &
+                           x_all, dx, dy, ndim, nloc, no_ele_col, col)
+    ! ordering the face numbers: bottom face=1, right=1, left=3 and top=4
+    ! row and row2 are row number associated with ele and ele2
+    ! no_ele_row is total number of element in each row
+    ! no_ele_col is total number of element in each column
+    ! ndim is no of dimensions
+    ! nloc is no of corner nodes
+    ! face_ele(iface, ele) = given the face no iface and element no return the element next to
+    ! the surface or if negative return the negative of the surface element number between element ele and face iface.
+
+    implicit none
+    integer, intent(in) :: no_ele_row, totele, no_ele_col, nloc, ndim, nface
+    integer, intent(out) :: row, row2 , col
+    integer:: face_ele(nface,totele), face_list_no(nface,totele), ele, iface
+
+    real, intent(in) :: dx, dy
+    real, intent(out) :: x_all(ndim,nloc,totele)
+
+    do ele=1,totele
+      row = ceiling(real(ele)/no_ele_row)
+      col = ele-(no_ele_row*(row-1))
+
+      ! corner node coordinates
+      x_all(1,1,ele) = dx*(col-1); x_all(2,1,ele) = dy*(row-1)
+      x_all(1,2,ele) = dx*col    ; x_all(2,2,ele) = dy*(row-1)
+      x_all(1,3,ele) = dx*(col-1); x_all(2,3,ele) = dy*row
+      x_all(1,4,ele) = dx*col    ; x_all(2,4,ele) = dy*row
+
+      ! findin neighbiuring ele and face numbers
+      do iface=1,nface
+        if (iface==1) then
+          face_ele(iface,ele) = ele - no_ele_row
+          ! face_list_no(iface,ele) = 4
+          ! row2 = ceiling(real(ele)/no_ele_row)
+          ! if (row2.EQ.1) face_list_no(iface,ele) = -1*face_list_no(iface,ele)
+
+        elseif ( iface==2 ) then
+          face_ele(iface,ele) = ele - 1
+          ! face_list_no(iface,ele) = 3
+          row2 = ceiling(real(face_ele(iface,ele))/no_ele_row)
+          if (row2.NE.row) then
+            face_ele(iface,ele) = -1*face_ele(iface,ele)  !It is a boundary element located at the right side of the domain
+            ! face_list_no(iface,ele) = -1*face_list_no(iface,ele)
+          end if
+
+        elseif ( iface==3 ) then
+          face_ele(iface,ele) = ele +1   !It is a boundary element
+          ! face_list_no(iface,ele) = 2
+          row2 = ceiling(real(face_ele(iface,ele))/no_ele_row)
+          if (row2.NE.row) then
+            face_ele(iface,ele) = -1*face_ele(iface,ele)  !It is a boundary element located at the lest side of the domain
+            ! face_list_no(iface,ele) = -1*face_list_no(iface,ele)
+          end if
+
+        elseif ( iface==4 ) then
+          face_ele(iface,ele) = ele + no_ele_row
+          ! face_list_no(iface,ele) = 1
+          if (face_ele(iface,ele).GT.totele) then
+            face_ele(iface,ele) = -1*face_ele(iface,ele)  !It is a boundary element located at the top of the domain
+            ! face_list_no(iface,ele) = -1*face_list_no(iface,ele)
+          end if
+        end if
+      end do
+    end do
+  end subroutine ele_info
 
 
   ! This subroutine generates structured triangular mesh

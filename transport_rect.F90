@@ -55,6 +55,7 @@ module transport_rect
     dx = x_length/no_ele_row
     dy = y_length/no_ele_col
     dt = CFL*dx
+    ntime = time/dt
 
     allocate(n( ngi, nloc ), nx( ngi, ndim, nloc ), nlx( ngi, ndim, nloc ), M(ngi,nloc))
     allocate(weight(ngi), detwei(ngi), sdetwei(sngi))
@@ -113,8 +114,8 @@ module transport_rect
 
     LOWQUA=.true.
     call RE2DN4(LOWQUA,NGI,NLOC,MLOC,M,WEIGHT,N,NLX(:,1,:),NLX(:,2,:),  SNGI,SNLOC,sweight,SN_orig,SNLX_orig)
-    ! call ele_info(totele, nface, face_ele, no_ele_row, row, row2, &
-    !               x_all, dx, dy, ndim, nloc, no_ele_col, col)
+    call ele_info(totele, nface, face_ele, no_ele_row, row, row2, &
+                  x_all, dx, dy, ndim, nloc, no_ele_col, col)
     call surface_pointers_sn(nface, sngi, snloc, nloc, ndim, sndim, totele, n_s_list_no, no_ele_row, no_ele_col, &
                  sn_orig, snlx_orig, face_sn, face_snlx, face_sn2, face_list_no)
 
@@ -126,7 +127,9 @@ module transport_rect
         do ele=1,totele
           ! volume integration
           x_loc(:,:)=x_all(:,:,ele) ! x_all contains the coordinates of the corner nodes
+
           call det_nlx( x_loc, n, nlx, nx, detwei, weight, ndim, nloc, ngi, inv_jac )
+          print*, x_loc
           !volume=sum(detwei)
       !      do gi=1,ngi
       !         print *,'gi=',gi
@@ -152,30 +155,30 @@ module transport_rect
                ugi(gi,idim)=sum(n(gi,:)*u_loc(idim,:))
                tnew_xgi(gi,idim)=sum(nx(gi,idim,:)*tnew_loc(:))
             end do
-            tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
-            told_gi(gi)=sum(n(gi,:)*told_loc(:))
-            rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
-      ! a_star
-      ! eq 4
-            ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
-            a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
-            a_star(gi,:) = a_coef * tnew_xgi(gi,:)
-            ! eq 14
-            ! p_star(gi) =0.0
-            ! do iloc=1,nloc
-            !    p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*nx(gi,:,iloc) ))  )
-            ! end do
-            ! p_star(gi) = 0.25/max(toler, p_star(gi))
-            ! eq 23 for P*
-            p_star(gi) =0.0
-            do idim=1,ndim
-              do iloc=1,nloc
-                 p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
-              end do
-            end do
-            p_star(gi) = min(1/toler ,0.25/p_star(gi) )
-            ! eq 18
-            diff_coe(gi) = diff_coe_factor*(0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) ))
+      !       tnew_gi(gi)=sum(n(gi,:)*tnew_loc(:))
+      !       told_gi(gi)=sum(n(gi,:)*told_loc(:))
+      !       rgi(gi)=(tnew_gi(gi)-told_gi(gi))/dt + sum(ugi(gi,:)*tnew_xgi(gi,:))
+      ! ! a_star
+      ! ! eq 4
+      !       ! a_coef=sum(ugi(gi,:)*txgi(gi,:))/max(toler, sum( txgi(gi,:)**2 ) )
+      !       a_coef=rgi(gi)/max(toler, sum( tnew_xgi(gi,:)**2 ) )
+      !       a_star(gi,:) = a_coef * tnew_xgi(gi,:)
+      !       ! eq 14
+      !       ! p_star(gi) =0.0
+      !       ! do iloc=1,nloc
+      !       !    p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*nx(gi,:,iloc) ))  )
+      !       ! end do
+      !       ! p_star(gi) = 0.25/max(toler, p_star(gi))
+      !       ! eq 23 for P*
+      !       p_star(gi) =0.0
+      !       do idim=1,ndim
+      !         do iloc=1,nloc
+      !            p_star(gi) = max(p_star(gi), abs(sum( a_star(gi,:)*(inv_jac(gi,:,idim)))  ))
+      !         end do
+      !       end do
+      !       p_star(gi) = min(1/toler ,0.25/p_star(gi) )
+      !       ! eq 18
+      !       diff_coe(gi) = diff_coe_factor*(0.25*rgi(gi)**2 *p_star(gi) /max(toler, sum( tnew_xgi(gi,:)**2 ) ))
           end do
           rhs_loc=0.0 ! the local to element rhs vector.
           mass_ele=0.0 ! initialize mass matric to be zero.
@@ -186,7 +189,7 @@ module transport_rect
               !jnod = glob_no(ele,jloc)
 
               do gi=1,ngi
-                stab(iloc,jloc) = stab(iloc,jloc) + sum(diff_coe(gi)* nx(gi,:,jloc)* nx(gi,:,iloc))* detwei(gi)
+                ! stab(iloc,jloc) = stab(iloc,jloc) + sum(diff_coe(gi)* nx(gi,:,jloc)* nx(gi,:,iloc))* detwei(gi)
                 !M(inod,jnod) = M(inod,jnod) + ngi_3p_wei(g)*sh_func(iloc)*sh_func(jloc)*det_jac
                 mass_ele(iloc,jloc) = mass_ele(iloc,jloc) + n(gi,iloc)*n(gi,jloc)*detwei(gi)
               end do ! quadrature
@@ -309,25 +312,26 @@ module transport_rect
         end do ! do ele=1,totele
         tnew=tnew_nonlin
       end do ! do its=1,nits
+      print*, 'itime =', itime
     end do ! do itime=1,ntime
 
 ! print*, sum(abs(tnew-tnew_analytical))*100/(totele*nloc)
 
     OPEN(unit=10, file='DG-rectangular_structured')
 
-    ! for 1D results only
-      do ele=1,totele
-        write(10,*) x_all(1,1,ele), tnew(1,ele)
-        write(10,*) x_all(1,2,ele), tnew(2,ele)
-      end do
+    ! ! for 1D results only
+    !   do ele=1,totele
+    !     write(10,*) x_all(1,1,ele), tnew(1,ele)
+    !     write(10,*) x_all(1,2,ele), tnew(2,ele)
+    !   end do
 
       ! for 2D results only
-      ! do ele=1,totele
-      !   write(10,*) x_all(1,1,ele), x_all(2,1,ele), tnew(1,ele)
-      !   write(10,*) x_all(1,2,ele), x_all(2,2,ele), tnew(2,ele)
-      !   write(10,*) x_all(1,3,ele), x_all(2,3,ele), tnew(3,ele)
-      !   write(10,*) x_all(1,4,ele), x_all(2,4,ele), tnew(4,ele)
-      ! end do
+      do ele=1,totele
+        write(10,*) x_all(1,1,ele), x_all(2,1,ele), tnew(1,ele)
+        write(10,*) x_all(1,2,ele), x_all(2,2,ele), tnew(2,ele)
+        write(10,*) x_all(1,3,ele), x_all(2,3,ele), tnew(3,ele)
+        write(10,*) x_all(1,4,ele), x_all(2,4,ele), tnew(4,ele)
+      end do
     close(10)
 
     OPEN(unit=11, file='DG-rectangular_structured_analytical')

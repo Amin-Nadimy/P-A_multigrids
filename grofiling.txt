@@ -2,49 +2,41 @@ Flat profile:
 
 Each sample counts as 0.01 seconds.
   %   cumulative   self              self     total           
- time   seconds   seconds    calls  ms/call  ms/call  name    
- 40.91      0.09     0.09  2095019     0.00     0.00  __msh2tri_MOD_checkneig
- 13.64      0.12     0.03  6767137     0.00     0.00  __msh2tri_MOD_get_length
-  9.09      0.14     0.02        1    20.00   210.00  __transport_tri_semi_MOD_semi_implicit_iterative
-  4.55      0.15     0.01   455977     0.00     0.00  __generic_MOD_areequal2
-  4.55      0.16     0.01    25497     0.00     0.00  __strings_MOD_compact
-  4.55      0.17     0.01     6144     0.00     0.00  __msh2tri_MOD_get_d_center
-  4.55      0.18     0.01     3346     0.00     0.01  __strings_MOD_parse
-  4.55      0.19     0.01     2048     0.00     0.01  __shapfun_MOD_semi_tri_det_nlx
-  4.55      0.20     0.01     2048     0.00     0.00  __shapfun_MOD_tri_det_nlx
-  4.55      0.21     0.01        1    10.00   160.00  __msh2tri_MOD_readmsh
-  4.55      0.22     0.01                             __evaluate_MOD_evalexpr_dc
-  0.00      0.22     0.00   155648     0.00     0.00  __msh2tri_MOD_get_splitting
-  0.00      0.22     0.00   155648     0.00     0.00  __msh2tri_MOD_get_str_info
-  0.00      0.22     0.00    22151     0.00     0.00  __strings_MOD_removebksl
-  0.00      0.22     0.00    22151     0.00     0.00  __strings_MOD_split
-  0.00      0.22     0.00    20480     0.00     0.00  __shapfun_unstruc_MOD_get_mass_stiff_diffvol
-  0.00      0.22     0.00    19144     0.00     0.00  __strings_MOD_is_digit
-  0.00      0.22     0.00    19144     0.00     0.00  __strings_MOD_value_dr
-  0.00      0.22     0.00    18432     0.00     0.00  __msh2tri_MOD_getneigdatamesh
-  0.00      0.22     0.00    17952     0.00     0.00  __generic_MOD_numloc
-  0.00      0.22     0.00    15828     0.00     0.00  __strings_MOD_value_si
-  0.00      0.22     0.00    12288     0.00     0.00  __shapfun_MOD_normgi
-  0.00      0.22     0.00    12288     0.00     0.00  __shapfun_MOD_xprod1
-  0.00      0.22     0.00     6144     0.00     0.00  __shapfun_MOD_det_snlx_all
-  0.00      0.22     0.00     4032     0.00     0.00  __generic_MOD_checkvector
-  0.00      0.22     0.00     3353     0.00     0.00  __strings_MOD_readline
-  0.00      0.22     0.00     2048     0.00     0.00  __shapfun_MOD_semi_det_snlx
-  0.00      0.22     0.00        5     0.00     0.00  __shapfun_MOD_triquaold
-  0.00      0.22     0.00        4     0.00     0.00  __shapfun_MOD_shatrinew
-  0.00      0.22     0.00        4     0.00     0.00  __shapfun_MOD_shatriold
-  0.00      0.22     0.00        4     0.00     0.00  __shapfun_MOD_triangles_tets_with_time
-  0.00      0.22     0.00        2     0.00     0.00  __shapfun_MOD_get_shape_funs
-  0.00      0.22     0.00        1     0.00   210.00  MAIN__
-  0.00      0.22     0.00        1     0.00     0.00  __shapfun_MOD_get_shape_funs_spec
-  0.00      0.22     0.00        1     0.00     0.00  __shapfun_MOD_get_shape_funs_with_faces
-  0.00      0.22     0.00        1     0.00     0.00  __shapfun_MOD_tri_surface_pointers_sn
-  0.00      0.22     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_get_shape_funs_spec_ustr
-  0.00      0.22     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr
-  0.00      0.22     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn
-  0.00      0.22     0.00        1     0.00     0.00  __splitting_MOD_get_str_neig
-  0.00      0.22     0.00        1     0.00     0.00  __splitting_MOD_get_surface_ele
-  0.00      0.22     0.00        1     0.00     0.00  __strings_MOD_delsubstr
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 65.06    515.77   515.77 1616784301     0.00     0.00  __msh2tri_MOD_get_length
+ 31.50    765.46   249.69 536821760     0.00     0.00  __msh2tri_MOD_checkneig
+  2.75    787.28    21.83        1    21.83   787.75  __msh2tri_MOD_readmsh
+  0.28    789.49     2.21        1     2.21   790.51  __transport_tri_unstr_MOD_unstr_explicit
+  0.18    790.93     1.44                             __evaluate_MOD_evalexpr_dc
+  0.09    791.67     0.74                             __msh2tri_MOD_get_d_center
+  0.02    791.84     0.17  1140666     0.00     0.00  __strings_MOD_compact
+  0.02    791.99     0.15  1179648     0.00     0.00  __shapfun_unstruc_MOD_get_unstr_sn2
+  0.02    792.14     0.15   393216     0.00     0.00  __shapfun_MOD_tri_det_nlx
+  0.02    792.27     0.13   991793     0.00     0.00  __strings_MOD_split
+  0.01    792.37     0.10  1179648     0.00     0.00  __shapfun_MOD_det_snlx_all
+  0.01    792.45     0.08  2257766     0.00     0.00  __generic_MOD_areequal2
+  0.01    792.53     0.08  1176576     0.00     0.00  __generic_MOD_numloc
+  0.01    792.59     0.06   148873     0.00     0.00  __strings_MOD_parse
+  0.00    792.62     0.03  2359296     0.00     0.00  __shapfun_MOD_normgi
+  0.00    792.65     0.03  1179648     0.00     0.00  __msh2tri_MOD_getneigdatamesh
+  0.00    792.67     0.02   991793     0.00     0.00  __strings_MOD_removebksl
+  0.00    792.68     0.01  2359296     0.00     0.00  __shapfun_MOD_xprod1
+  0.00    792.69     0.01   739730     0.00     0.00  __strings_MOD_value_si
+  0.00    792.70     0.01                             __generic_MOD_areequal3
+  0.00    792.70     0.00   888342     0.00     0.00  __strings_MOD_is_digit
+  0.00    792.70     0.00   888342     0.00     0.00  __strings_MOD_value_dr
+  0.00    792.70     0.00   441216     0.00     0.00  __generic_MOD_checkvector
+  0.00    792.70     0.00   148880     0.00     0.00  __strings_MOD_readline
+  0.00    792.70     0.00        3     0.00     0.00  __shapfun_MOD_triquaold
+  0.00    792.70     0.00        2     0.00     0.00  __shapfun_MOD_shatrinew
+  0.00    792.70     0.00        2     0.00     0.00  __shapfun_MOD_shatriold
+  0.00    792.70     0.00        2     0.00     0.00  __shapfun_MOD_triangles_tets_with_time
+  0.00    792.70     0.00        1     0.00   790.51  MAIN__
+  0.00    792.70     0.00        1     0.00     0.00  __shapfun_MOD_get_shape_funs
+  0.00    792.70     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_get_shape_funs_spec_ustr
+  0.00    792.70     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr
+  0.00    792.70     0.00        1     0.00     0.00  __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn
+  0.00    792.70     0.00        1     0.00     0.00  __strings_MOD_delsubstr
 
  %         the percentage of the total running time of the
 time       program used by this function.
@@ -73,7 +65,7 @@ name       the name of the function.  This is the minor sort
 	   in parenthesis it shows where it would appear in
 	   the gprof listing if it were to be printed.
 
-Copyright (C) 2012-2018 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright
@@ -82,192 +74,152 @@ notice and this notice are preserved.
 		     Call graph (explanation follows)
 
 
-granularity: each sample hit covers 2 byte(s) for 4.55% of 0.22 seconds
+granularity: each sample hit covers 2 byte(s) for 0.00% of 792.70 seconds
 
 index % time    self  children    called     name
-                0.00    0.21       1/1           main [2]
-[1]     95.5    0.00    0.21       1         MAIN__ [1]
-                0.02    0.19       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
+                0.00  790.51       1/1           main [2]
+[1]     99.7    0.00  790.51       1         MAIN__ [1]
+                2.21  788.30       1/1           __transport_tri_unstr_MOD_unstr_explicit [3]
 -----------------------------------------------
                                                  <spontaneous>
-[2]     95.5    0.00    0.21                 main [2]
-                0.00    0.21       1/1           MAIN__ [1]
+[2]     99.7    0.00  790.51                 main [2]
+                0.00  790.51       1/1           MAIN__ [1]
 -----------------------------------------------
-                0.02    0.19       1/1           MAIN__ [1]
-[3]     95.5    0.02    0.19       1         __transport_tri_semi_MOD_semi_implicit_iterative [3]
-                0.01    0.15       1/1           __msh2tri_MOD_readmsh [4]
-                0.01    0.01    2048/2048        __shapfun_MOD_semi_tri_det_nlx [8]
-                0.01    0.00    6144/6144        __msh2tri_MOD_get_d_center [11]
-                0.00    0.00  131072/155648      __msh2tri_MOD_get_splitting [21]
-                0.00    0.00   20480/20480       __shapfun_unstruc_MOD_get_mass_stiff_diffvol [24]
-                0.00    0.00   12288/18432       __msh2tri_MOD_getneigdatamesh [27]
-                0.00    0.00    2048/2048        __shapfun_MOD_semi_det_snlx [35]
-                0.00    0.00       1/1           __splitting_MOD_get_str_neig [47]
-                0.00    0.00       1/5           __shapfun_MOD_triquaold [36]
-                0.00    0.00       1/1           __splitting_MOD_get_surface_ele [48]
-                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [44]
-                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_spec [41]
+                2.21  788.30       1/1           MAIN__ [1]
+[3]     99.7    2.21  788.30       1         __transport_tri_unstr_MOD_unstr_explicit [3]
+               21.83  765.93       1/1           __msh2tri_MOD_readmsh [4]
+                0.15    0.00 1179648/1179648     __shapfun_unstruc_MOD_get_unstr_sn2 [12]
+                0.15    0.00  393216/393216      __shapfun_MOD_tri_det_nlx [13]
+                0.10    0.04 1179648/1179648     __shapfun_MOD_det_snlx_all [14]
+                0.03    0.08 1179648/1179648     __msh2tri_MOD_getneigdatamesh [15]
+                0.00    0.00       1/3           __shapfun_MOD_triquaold [33]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [38]
 -----------------------------------------------
-                0.01    0.15       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[4]     72.7    0.01    0.15       1         __msh2tri_MOD_readmsh [4]
-                0.09    0.04 2095019/2095019     __msh2tri_MOD_checkneig [5]
-                0.01    0.01    3346/3346        __strings_MOD_parse [7]
-                0.00    0.00    6144/6767137     __msh2tri_MOD_get_length [6]
-                0.00    0.00   15828/15828       __strings_MOD_value_si [29]
-                0.00    0.00    3353/3353        __strings_MOD_readline [34]
-                0.00    0.00    3316/19144       __strings_MOD_value_dr [26]
-                0.00    0.00       1/1           __strings_MOD_delsubstr [49]
+               21.83  765.93       1/1           __transport_tri_unstr_MOD_unstr_explicit [3]
+[4]     99.4   21.83  765.93       1         __msh2tri_MOD_readmsh [4]
+              249.69  515.75 536821760/536821760     __msh2tri_MOD_checkneig [5]
+                0.06    0.32  148873/148873      __strings_MOD_parse [9]
+                0.09    0.00  294912/1616784301     __msh2tri_MOD_get_length [6]
+                0.01    0.00  739730/739730      __strings_MOD_value_si [21]
+                0.00    0.00  148880/148880      __strings_MOD_readline [32]
+                0.00    0.00  148612/888342      __strings_MOD_value_dr [30]
+                0.00    0.00       1/1           __strings_MOD_delsubstr [41]
 -----------------------------------------------
-                0.09    0.04 2095019/2095019     __msh2tri_MOD_readmsh [4]
-[5]     59.1    0.09    0.04 2095019         __msh2tri_MOD_checkneig [5]
-                0.03    0.00 6760993/6767137     __msh2tri_MOD_get_length [6]
-                0.01    0.00  455977/455977      __generic_MOD_areequal2 [9]
-                0.00    0.00    4032/4032        __generic_MOD_checkvector [33]
+              249.69  515.75 536821760/536821760     __msh2tri_MOD_readmsh [4]
+[5]     96.6  249.69  515.75 536821760         __msh2tri_MOD_checkneig [5]
+              515.67    0.00 1616489389/1616784301     __msh2tri_MOD_get_length [6]
+                0.08    0.00 2257766/2257766     __generic_MOD_areequal2 [16]
+                0.00    0.00  441216/441216      __generic_MOD_checkvector [31]
 -----------------------------------------------
-                0.00    0.00    6144/6767137     __msh2tri_MOD_readmsh [4]
-                0.03    0.00 6760993/6767137     __msh2tri_MOD_checkneig [5]
-[6]     13.6    0.03    0.00 6767137         __msh2tri_MOD_get_length [6]
------------------------------------------------
-                0.01    0.01    3346/3346        __msh2tri_MOD_readmsh [4]
-[7]      9.1    0.01    0.01    3346         __strings_MOD_parse [7]
-                0.00    0.01   22151/22151       __strings_MOD_split [14]
-                0.00    0.00    3346/25497       __strings_MOD_compact [10]
-                0.00    0.00   22151/22151       __strings_MOD_removebksl [23]
------------------------------------------------
-                0.01    0.01    2048/2048        __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[8]      9.1    0.01    0.01    2048         __shapfun_MOD_semi_tri_det_nlx [8]
-                0.01    0.00    2048/2048        __shapfun_MOD_tri_det_nlx [12]
------------------------------------------------
-                0.01    0.00  455977/455977      __msh2tri_MOD_checkneig [5]
-[9]      4.5    0.01    0.00  455977         __generic_MOD_areequal2 [9]
------------------------------------------------
-                0.00    0.00    3346/25497       __strings_MOD_parse [7]
-                0.01    0.00   22151/25497       __strings_MOD_split [14]
-[10]     4.5    0.01    0.00   25497         __strings_MOD_compact [10]
------------------------------------------------
-                0.01    0.00    6144/6144        __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[11]     4.5    0.01    0.00    6144         __msh2tri_MOD_get_d_center [11]
-                0.00    0.00   24576/155648      __msh2tri_MOD_get_splitting [21]
------------------------------------------------
-                0.01    0.00    2048/2048        __shapfun_MOD_semi_tri_det_nlx [8]
-[12]     4.5    0.01    0.00    2048         __shapfun_MOD_tri_det_nlx [12]
+                0.09    0.00  294912/1616784301     __msh2tri_MOD_readmsh [4]
+              515.67    0.00 1616489389/1616784301     __msh2tri_MOD_checkneig [5]
+[6]     65.1  515.77    0.00 1616784301         __msh2tri_MOD_get_length [6]
 -----------------------------------------------
                                                  <spontaneous>
-[13]     4.5    0.01    0.00                 __evaluate_MOD_evalexpr_dc [13]
+[7]      0.2    1.44    0.00                 __evaluate_MOD_evalexpr_dc [7]
 -----------------------------------------------
-                0.00    0.01   22151/22151       __strings_MOD_parse [7]
-[14]     3.9    0.00    0.01   22151         __strings_MOD_split [14]
-                0.01    0.00   22151/25497       __strings_MOD_compact [10]
+                                                 <spontaneous>
+[8]      0.1    0.74    0.00                 __msh2tri_MOD_get_d_center [8]
 -----------------------------------------------
-                0.00    0.00   24576/155648      __msh2tri_MOD_get_d_center [11]
-                0.00    0.00  131072/155648      __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[21]     0.0    0.00    0.00  155648         __msh2tri_MOD_get_splitting [21]
-                0.00    0.00  155648/155648      __msh2tri_MOD_get_str_info [22]
+                0.06    0.32  148873/148873      __msh2tri_MOD_readmsh [4]
+[9]      0.0    0.06    0.32  148873         __strings_MOD_parse [9]
+                0.13    0.15  991793/991793      __strings_MOD_split [10]
+                0.02    0.00  148873/1140666     __strings_MOD_compact [11]
+                0.02    0.00  991793/991793      __strings_MOD_removebksl [19]
 -----------------------------------------------
-                0.00    0.00  155648/155648      __msh2tri_MOD_get_splitting [21]
-[22]     0.0    0.00    0.00  155648         __msh2tri_MOD_get_str_info [22]
+                0.13    0.15  991793/991793      __strings_MOD_parse [9]
+[10]     0.0    0.13    0.15  991793         __strings_MOD_split [10]
+                0.15    0.00  991793/1140666     __strings_MOD_compact [11]
 -----------------------------------------------
-                0.00    0.00   22151/22151       __strings_MOD_parse [7]
-[23]     0.0    0.00    0.00   22151         __strings_MOD_removebksl [23]
+                0.02    0.00  148873/1140666     __strings_MOD_parse [9]
+                0.15    0.00  991793/1140666     __strings_MOD_split [10]
+[11]     0.0    0.17    0.00 1140666         __strings_MOD_compact [11]
 -----------------------------------------------
-                0.00    0.00   20480/20480       __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[24]     0.0    0.00    0.00   20480         __shapfun_unstruc_MOD_get_mass_stiff_diffvol [24]
+                0.15    0.00 1179648/1179648     __transport_tri_unstr_MOD_unstr_explicit [3]
+[12]     0.0    0.15    0.00 1179648         __shapfun_unstruc_MOD_get_unstr_sn2 [12]
 -----------------------------------------------
-                0.00    0.00   19144/19144       __strings_MOD_value_dr [26]
-[25]     0.0    0.00    0.00   19144         __strings_MOD_is_digit [25]
+                0.15    0.00  393216/393216      __transport_tri_unstr_MOD_unstr_explicit [3]
+[13]     0.0    0.15    0.00  393216         __shapfun_MOD_tri_det_nlx [13]
 -----------------------------------------------
-                0.00    0.00    3316/19144       __msh2tri_MOD_readmsh [4]
-                0.00    0.00   15828/19144       __strings_MOD_value_si [29]
-[26]     0.0    0.00    0.00   19144         __strings_MOD_value_dr [26]
-                0.00    0.00   19144/19144       __strings_MOD_is_digit [25]
+                0.10    0.04 1179648/1179648     __transport_tri_unstr_MOD_unstr_explicit [3]
+[14]     0.0    0.10    0.04 1179648         __shapfun_MOD_det_snlx_all [14]
+                0.03    0.01 2359296/2359296     __shapfun_MOD_normgi [18]
 -----------------------------------------------
-                0.00    0.00    6144/18432       __splitting_MOD_get_surface_ele [48]
-                0.00    0.00   12288/18432       __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[27]     0.0    0.00    0.00   18432         __msh2tri_MOD_getneigdatamesh [27]
-                0.00    0.00   17952/17952       __generic_MOD_numloc [28]
+                0.03    0.08 1179648/1179648     __transport_tri_unstr_MOD_unstr_explicit [3]
+[15]     0.0    0.03    0.08 1179648         __msh2tri_MOD_getneigdatamesh [15]
+                0.08    0.00 1176576/1176576     __generic_MOD_numloc [17]
 -----------------------------------------------
-                0.00    0.00   17952/17952       __msh2tri_MOD_getneigdatamesh [27]
-[28]     0.0    0.00    0.00   17952         __generic_MOD_numloc [28]
+                0.08    0.00 2257766/2257766     __msh2tri_MOD_checkneig [5]
+[16]     0.0    0.08    0.00 2257766         __generic_MOD_areequal2 [16]
 -----------------------------------------------
-                0.00    0.00   15828/15828       __msh2tri_MOD_readmsh [4]
-[29]     0.0    0.00    0.00   15828         __strings_MOD_value_si [29]
-                0.00    0.00   15828/19144       __strings_MOD_value_dr [26]
+                0.08    0.00 1176576/1176576     __msh2tri_MOD_getneigdatamesh [15]
+[17]     0.0    0.08    0.00 1176576         __generic_MOD_numloc [17]
 -----------------------------------------------
-                0.00    0.00   12288/12288       __shapfun_MOD_det_snlx_all [32]
-[30]     0.0    0.00    0.00   12288         __shapfun_MOD_normgi [30]
-                0.00    0.00   12288/12288       __shapfun_MOD_xprod1 [31]
+                0.03    0.01 2359296/2359296     __shapfun_MOD_det_snlx_all [14]
+[18]     0.0    0.03    0.01 2359296         __shapfun_MOD_normgi [18]
+                0.01    0.00 2359296/2359296     __shapfun_MOD_xprod1 [20]
 -----------------------------------------------
-                0.00    0.00   12288/12288       __shapfun_MOD_normgi [30]
-[31]     0.0    0.00    0.00   12288         __shapfun_MOD_xprod1 [31]
+                0.02    0.00  991793/991793      __strings_MOD_parse [9]
+[19]     0.0    0.02    0.00  991793         __strings_MOD_removebksl [19]
 -----------------------------------------------
-                0.00    0.00    6144/6144        __shapfun_MOD_semi_det_snlx [35]
-[32]     0.0    0.00    0.00    6144         __shapfun_MOD_det_snlx_all [32]
-                0.00    0.00   12288/12288       __shapfun_MOD_normgi [30]
+                0.01    0.00 2359296/2359296     __shapfun_MOD_normgi [18]
+[20]     0.0    0.01    0.00 2359296         __shapfun_MOD_xprod1 [20]
 -----------------------------------------------
-                0.00    0.00    4032/4032        __msh2tri_MOD_checkneig [5]
-[33]     0.0    0.00    0.00    4032         __generic_MOD_checkvector [33]
+                0.01    0.00  739730/739730      __msh2tri_MOD_readmsh [4]
+[21]     0.0    0.01    0.00  739730         __strings_MOD_value_si [21]
+                0.00    0.00  739730/888342      __strings_MOD_value_dr [30]
 -----------------------------------------------
-                0.00    0.00    3353/3353        __msh2tri_MOD_readmsh [4]
-[34]     0.0    0.00    0.00    3353         __strings_MOD_readline [34]
+                                                 <spontaneous>
+[22]     0.0    0.01    0.00                 __generic_MOD_areequal3 [22]
 -----------------------------------------------
-                0.00    0.00    2048/2048        __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[35]     0.0    0.00    0.00    2048         __shapfun_MOD_semi_det_snlx [35]
-                0.00    0.00    6144/6144        __shapfun_MOD_det_snlx_all [32]
+                0.00    0.00  888342/888342      __strings_MOD_value_dr [30]
+[29]     0.0    0.00    0.00  888342         __strings_MOD_is_digit [29]
 -----------------------------------------------
-                0.00    0.00       1/5           __transport_tri_semi_MOD_semi_implicit_iterative [3]
-                0.00    0.00       4/5           __shapfun_MOD_triangles_tets_with_time [39]
-[36]     0.0    0.00    0.00       5         __shapfun_MOD_triquaold [36]
+                0.00    0.00  148612/888342      __msh2tri_MOD_readmsh [4]
+                0.00    0.00  739730/888342      __strings_MOD_value_si [21]
+[30]     0.0    0.00    0.00  888342         __strings_MOD_value_dr [30]
+                0.00    0.00  888342/888342      __strings_MOD_is_digit [29]
 -----------------------------------------------
-                0.00    0.00       4/4           __shapfun_MOD_triangles_tets_with_time [39]
-[37]     0.0    0.00    0.00       4         __shapfun_MOD_shatrinew [37]
-                0.00    0.00       4/4           __shapfun_MOD_shatriold [38]
+                0.00    0.00  441216/441216      __msh2tri_MOD_checkneig [5]
+[31]     0.0    0.00    0.00  441216         __generic_MOD_checkvector [31]
 -----------------------------------------------
-                0.00    0.00       4/4           __shapfun_MOD_shatrinew [37]
-[38]     0.0    0.00    0.00       4         __shapfun_MOD_shatriold [38]
+                0.00    0.00  148880/148880      __msh2tri_MOD_readmsh [4]
+[32]     0.0    0.00    0.00  148880         __strings_MOD_readline [32]
 -----------------------------------------------
-                0.00    0.00       4/4           __shapfun_MOD_get_shape_funs [40]
-[39]     0.0    0.00    0.00       4         __shapfun_MOD_triangles_tets_with_time [39]
-                0.00    0.00       4/5           __shapfun_MOD_triquaold [36]
-                0.00    0.00       4/4           __shapfun_MOD_shatrinew [37]
+                0.00    0.00       1/3           __transport_tri_unstr_MOD_unstr_explicit [3]
+                0.00    0.00       2/3           __shapfun_MOD_triangles_tets_with_time [36]
+[33]     0.0    0.00    0.00       3         __shapfun_MOD_triquaold [33]
 -----------------------------------------------
-                0.00    0.00       1/2           __shapfun_MOD_get_shape_funs_with_faces [42]
-                0.00    0.00       1/2           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
-[40]     0.0    0.00    0.00       2         __shapfun_MOD_get_shape_funs [40]
-                0.00    0.00       4/4           __shapfun_MOD_triangles_tets_with_time [39]
+                0.00    0.00       2/2           __shapfun_MOD_triangles_tets_with_time [36]
+[34]     0.0    0.00    0.00       2         __shapfun_MOD_shatrinew [34]
+                0.00    0.00       2/2           __shapfun_MOD_shatriold [35]
 -----------------------------------------------
-                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[41]     0.0    0.00    0.00       1         __shapfun_MOD_get_shape_funs_spec [41]
-                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_with_faces [42]
+                0.00    0.00       2/2           __shapfun_MOD_shatrinew [34]
+[35]     0.0    0.00    0.00       2         __shapfun_MOD_shatriold [35]
 -----------------------------------------------
-                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_spec [41]
-[42]     0.0    0.00    0.00       1         __shapfun_MOD_get_shape_funs_with_faces [42]
-                0.00    0.00       1/2           __shapfun_MOD_get_shape_funs [40]
-                0.00    0.00       1/1           __shapfun_MOD_tri_surface_pointers_sn [43]
+                0.00    0.00       2/2           __shapfun_MOD_get_shape_funs [37]
+[36]     0.0    0.00    0.00       2         __shapfun_MOD_triangles_tets_with_time [36]
+                0.00    0.00       2/3           __shapfun_MOD_triquaold [33]
+                0.00    0.00       2/2           __shapfun_MOD_shatrinew [34]
 -----------------------------------------------
-                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs_with_faces [42]
-[43]     0.0    0.00    0.00       1         __shapfun_MOD_tri_surface_pointers_sn [43]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [39]
+[37]     0.0    0.00    0.00       1         __shapfun_MOD_get_shape_funs [37]
+                0.00    0.00       2/2           __shapfun_MOD_triangles_tets_with_time [36]
 -----------------------------------------------
-                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[44]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [44]
-                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
+                0.00    0.00       1/1           __transport_tri_unstr_MOD_unstr_explicit [3]
+[38]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [38]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [39]
 -----------------------------------------------
-                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [44]
-[45]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
-                0.00    0.00       1/2           __shapfun_MOD_get_shape_funs [40]
-                0.00    0.00       1/1           __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn [46]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [38]
+[39]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [39]
+                0.00    0.00       1/1           __shapfun_MOD_get_shape_funs [37]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn [40]
 -----------------------------------------------
-                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [45]
-[46]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn [46]
------------------------------------------------
-                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[47]     0.0    0.00    0.00       1         __splitting_MOD_get_str_neig [47]
------------------------------------------------
-                0.00    0.00       1/1           __transport_tri_semi_MOD_semi_implicit_iterative [3]
-[48]     0.0    0.00    0.00       1         __splitting_MOD_get_surface_ele [48]
-                0.00    0.00    6144/18432       __msh2tri_MOD_getneigdatamesh [27]
+                0.00    0.00       1/1           __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [39]
+[40]     0.0    0.00    0.00       1         __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn [40]
 -----------------------------------------------
                 0.00    0.00       1/1           __msh2tri_MOD_readmsh [4]
-[49]     0.0    0.00    0.00       1         __strings_MOD_delsubstr [49]
+[41]     0.0    0.00    0.00       1         __strings_MOD_delsubstr [41]
 -----------------------------------------------
 
  This table describes the call tree of the program, and was sorted by
@@ -352,7 +304,7 @@ index % time    self  children    called     name
  for that member, how many times it was called from other members of
  the cycle.
 
-Copyright (C) 2012-2018 Free Software Foundation, Inc.
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright
@@ -360,17 +312,15 @@ notice and this notice are preserved.
 
 Index by function name
 
-   [1] MAIN__ (main.F90)      [41] __shapfun_MOD_get_shape_funs_spec [45] __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr
-  [13] __evaluate_MOD_evalexpr_dc [42] __shapfun_MOD_get_shape_funs_with_faces [46] __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn
-   [9] __generic_MOD_areequal2 [30] __shapfun_MOD_normgi  [47] __splitting_MOD_get_str_neig
-  [33] __generic_MOD_checkvector [35] __shapfun_MOD_semi_det_snlx [48] __splitting_MOD_get_surface_ele
-  [28] __generic_MOD_numloc    [8] __shapfun_MOD_semi_tri_det_nlx [10] __strings_MOD_compact
-   [5] __msh2tri_MOD_checkneig [37] __shapfun_MOD_shatrinew [49] __strings_MOD_delsubstr
-  [11] __msh2tri_MOD_get_d_center [38] __shapfun_MOD_shatriold [25] __strings_MOD_is_digit
-   [6] __msh2tri_MOD_get_length [12] __shapfun_MOD_tri_det_nlx [7] __strings_MOD_parse
-  [21] __msh2tri_MOD_get_splitting [43] __shapfun_MOD_tri_surface_pointers_sn [34] __strings_MOD_readline
-  [22] __msh2tri_MOD_get_str_info [39] __shapfun_MOD_triangles_tets_with_time [23] __strings_MOD_removebksl
-  [27] __msh2tri_MOD_getneigdatamesh [36] __shapfun_MOD_triquaold [14] __strings_MOD_split
-   [4] __msh2tri_MOD_readmsh  [31] __shapfun_MOD_xprod1   [26] __strings_MOD_value_dr
-  [32] __shapfun_MOD_det_snlx_all [24] __shapfun_unstruc_MOD_get_mass_stiff_diffvol [29] __strings_MOD_value_si
-  [40] __shapfun_MOD_get_shape_funs [44] __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [3] __transport_tri_semi_MOD_semi_implicit_iterative
+   [1] MAIN__ (main.F90)      [37] __shapfun_MOD_get_shape_funs [11] __strings_MOD_compact
+   [7] __evaluate_MOD_evalexpr_dc [18] __shapfun_MOD_normgi [41] __strings_MOD_delsubstr
+  [16] __generic_MOD_areequal2 [34] __shapfun_MOD_shatrinew [29] __strings_MOD_is_digit
+  [22] __generic_MOD_areequal3 [35] __shapfun_MOD_shatriold [9] __strings_MOD_parse
+  [31] __generic_MOD_checkvector [13] __shapfun_MOD_tri_det_nlx [32] __strings_MOD_readline
+  [17] __generic_MOD_numloc   [36] __shapfun_MOD_triangles_tets_with_time [19] __strings_MOD_removebksl
+   [5] __msh2tri_MOD_checkneig [33] __shapfun_MOD_triquaold [10] __strings_MOD_split
+   [8] __msh2tri_MOD_get_d_center [20] __shapfun_MOD_xprod1 [30] __strings_MOD_value_dr
+   [6] __msh2tri_MOD_get_length [38] __shapfun_unstruc_MOD_get_shape_funs_spec_ustr [21] __strings_MOD_value_si
+  [15] __msh2tri_MOD_getneigdatamesh [39] __shapfun_unstruc_MOD_get_shape_funs_with_faces_unstr [3] __transport_tri_unstr_MOD_unstr_explicit
+   [4] __msh2tri_MOD_readmsh  [12] __shapfun_unstruc_MOD_get_unstr_sn2
+  [14] __shapfun_MOD_det_snlx_all [40] __shapfun_unstruc_MOD_unstr_tri_surface_pointers_sn
