@@ -439,12 +439,13 @@ module transport_tri
 
     u_bc(:,:,:)=0.0 ! this contains the boundary conditions on velocity just outside the domain
     tnew(:,:) = 0.0
-    face_nodes(2,1) = 1
-    face_nodes(1,1) = 3
+    face_nodes(1,1) = 1
+    face_nodes(2,1) = 3
     face_nodes(1,2) = 3
     face_nodes(2,2) = 2
     face_nodes(1,3) = 2
     face_nodes(2,3) = 1
+
 
     ! 1D initial conditions
     ! tnew(:,1:2) = 1.0 ! only correct for 1D?
@@ -600,16 +601,15 @@ module transport_tri
             ! r_got_boundary=0.0 not on boundary
 
             tnew_loc2(:)=tnew(:,ele2) * (1.0-r_got_boundary)   + t_bc(:,ele)  * r_got_boundary
-            stnew_loc2(2,1) = tnew_loc2(3)
-            stnew_loc2(1,1) = tnew_loc2(1)
-            stnew_loc2(2,2) = tnew_loc2(3)
-            stnew_loc2(1,2) = tnew_loc2(2)
-            stnew_loc2(2,3) = tnew_loc2(2)
-            stnew_loc2(1,3) = tnew_loc2(1)
+            ! stnew_loc2(2,1) = tnew_loc2(1)
+            ! stnew_loc2(1,1) = tnew_loc2(3)
+            ! stnew_loc2(2,2) = tnew_loc2(3)
+            ! stnew_loc2(1,2) = tnew_loc2(2)
+            ! stnew_loc2(2,3) = tnew_loc2(2)
+            ! stnew_loc2(1,3) = tnew_loc2(1)
 
-
-
-
+            stnew_loc2(2,iface) = tnew_loc2(face_nodes(1,iface))
+            stnew_loc2(1,iface) = tnew_loc2(face_nodes(2,iface))
 
             u_loc2(:,:)=u_ele(:,:,ele2)* (1.0-r_got_boundary)  + u_bc(:,:,ele)* r_got_boundary
 
